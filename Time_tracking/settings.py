@@ -45,6 +45,10 @@ INSTALLED_APPS = [
     'time_tracking_main',
     'django.contrib.sites',
     'django.contrib.sitemaps',
+    'django.contrib.postgres',
+    'accounts.apps.AccountsConfig',
+
+
 ]
 
 MIDDLEWARE = [
@@ -155,3 +159,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 # https://docs.djangoproject.com/en/5.1/topics/email/
+
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
