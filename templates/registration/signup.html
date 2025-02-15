@@ -4,12 +4,23 @@
 {% endblock %}
 {% block content %}
   <h2>Регистрация</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-
-    <p>
-      <input type="submit" value="Регистрация" />
-    </p>
-  </form>
+  <div>
+    <br />
+    <form method="POST" action="">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          {% for field in form %}
+            {% if field.errors %}
+              {{ field.errors }}
+            {% endif %}
+          {% endfor %}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+        </div>
+      {% endif %}
+      {{ form.as_p }}
+      <br />
+      <button type="submit" class="btn btn-secondary">Зарегистрироваться</button>
+    </form>
+  </div>
 {% endblock %}
