@@ -15,6 +15,9 @@
                 <a class="nav-link" href="#" onclick="this.closest('form').submit();">Выйти из системы</a>
               </form>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users-profile' %}">Мой профиль</a>
+            </li> 
         {% else %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'signup' %}">Регистрация</a>
