@@ -8,6 +8,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 
+from django.shortcuts import redirect
+from django.views import generic
+from django.urls import reverse_lazy
+from django.contrib import messages
+
 
 class SignUpView(generic.CreateView):
     form_class = SignUpForm
@@ -19,6 +24,7 @@ class SignUpView(generic.CreateView):
         # перенаправит на домашнюю страницу, если пользователь попытается получить доступ к странице регистрации после авторизации
         if request.user.is_authenticated:
             return redirect(to='/')
+        return super().dispatch(request, *args, **kwargs)  # Добавлено
 
     def get(self, request, *args, **kwargs):
         form = self.form_class(initial=self.initial)

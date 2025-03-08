@@ -16,7 +16,7 @@ def create_profile(sender, instance, created, **kwargs):
 def user_postsave(sender, instance, created, **kwargs):
     if created:
         subject = instance.first_name
-        message = f'Добро пожаловать {instance.username} твой доступ\n почта {instance.email}\n {instance.password} '
+        message = f'Добро пожаловать {instance.username}'
         from_email = settings.EMAIL_HOST_USER
         to_email = instance.email
         send_mail(

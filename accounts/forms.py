@@ -3,11 +3,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Profile
+from .validators import validate_latin_characters
 
 
 class SignUpForm(UserCreationForm):
 
-    username = forms.CharField(max_length=100, label="", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Имя пользователя'}))
+    username = forms.CharField(max_length=100, label="", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Логин'}), validators=[validate_latin_characters])
 
     email = forms.EmailField(max_length=100, label="", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email '}))
 
@@ -23,7 +24,12 @@ class SignUpForm(UserCreationForm):
 
 
 class LoginForm(AuthenticationForm):
-    username = forms.CharField(max_length=100, label="", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Имя пользователя'}))
+    username = forms.CharField(
+        max_length=100,
+        label="",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Логин'}),
+        validators=[validate_latin_characters]
+    )
 
     password = forms.CharField(max_length=100, label="", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Пароль'}))
 
