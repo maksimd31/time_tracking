@@ -14,8 +14,6 @@ class Profile(models.Model):
         default='images/avatars/default.jpg',
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg','dmg'))])
-    bio = models.TextField(max_length=500, blank=True, verbose_name='Информация о себе')
-    birth_date = models.DateField(null=True, blank=True, verbose_name='Дата рождения')
 
     class Meta:
         """

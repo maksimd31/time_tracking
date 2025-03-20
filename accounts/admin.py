@@ -1,7 +1,11 @@
-from django.contrib import admin
-
-# Register your models here.
 from accounts.models import Profile
 from django.contrib import admin
 
-admin.site.register(Profile)
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """
+    Админ-панель модели профиля
+    """
+    list_display = ('user', 'slug')
+
+    list_display_links = ('user', 'slug')
