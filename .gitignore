@@ -178,3 +178,5 @@ cython_debug/
 .env
 .db.sqlite3
 shpora.md
+.DS_Store
+time.zip
