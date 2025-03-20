@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView
 from .forms import SignUpForm, LoginForm, UpdateUserForm, UpdateProfileForm
@@ -89,7 +90,7 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
 
 
 
-class ProfileDetailView(DetailView):
+class ProfileDetailView(LoginRequiredMixin,DetailView):
     """
     Представление для просмотра профиля
     """
@@ -105,13 +106,15 @@ class ProfileDetailView(DetailView):
         return context
 
 
-class ProfileUpdateView(UpdateView):
+class ProfileUpdateView(LoginRequiredMixin,SuccessMessageMixin,UpdateView):
     """
     Представление для редактирования профиля
     """
     model = Profile
     form_class = ProfileUpdateForm
     template_name = 'accounts/profile_edit.html'
+    success_message = 'Запись была успешно обновлена!'
+
 
     def get_object(self, queryset=None):
         return self.request.user.profile
