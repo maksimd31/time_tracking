@@ -1,9 +1,6 @@
 from django.shortcuts import render
 from .models import TimeInterval
 
-# Create your views here.
-
-
 def index(request):
 
     time = TimeInterval.objects.all()
