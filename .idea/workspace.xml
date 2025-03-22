@@ -4,32 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="fix gitignore">
-      <change afterPath="$PROJECT_DIR$/templates/accounts/user_login.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/accounts/user_register.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/registration2/change_password.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/registration2/logout.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add Mixinlogin, templaces messege, mixinMessage">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Time_tracking/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/Time_tracking/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/accounts/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/accounts/profile_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/profile_detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/nav_bar.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/nav_bar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/change_password.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/change_password.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/login.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/registration/logout.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/logout.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/password_reset_complete.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/password_reset_complete.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/password_reset_confirm.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/password_reset_confirm.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/password_reset_done.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/password_reset_done.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/password_reset_email.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/password_reset_email.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/password_reset_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/password_reset_form.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/password_reset_subject.txt" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/password_reset_subject.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/profile.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/profile.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/registration/signup.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/registration2/signup.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_main/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_main/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,33 +47,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Django Server.time_tracking.executor": "Run",
-    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "django.template.preview.state": "SHOW_EDITOR",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/ms/PycharmProjects/time_tracking/templates/accounts",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Django Server.time_tracking.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/ms/PycharmProjects/time_tracking/services&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/templates/accounts" />
       <recent name="$PROJECT_DIR$/services" />
       <recent name="$PROJECT_DIR$/media/images/avatars" />
       <recent name="$PROJECT_DIR$/media" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/templates" />
+      <recent name="$PROJECT_DIR$/templates/accounts" />
     </key>
   </component>
   <component name="RunManager">
@@ -157,7 +136,7 @@
       <workItem from="1742397325906" duration="4800000" />
       <workItem from="1742454830596" duration="170000" />
       <workItem from="1742455005380" duration="433000" />
-      <workItem from="1742455447520" duration="22349000" />
+      <workItem from="1742455447520" duration="10644000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -255,15 +234,7 @@
       <option name="project" value="LOCAL" />
       <updated>1742477292621</updated>
     </task>
-    <task id="LOCAL-00013" summary="fix gitignore">
-      <option name="closed" value="true" />
-      <created>1742481479047</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1742481479047</updated>
-    </task>
-    <option name="localTasksCounter" value="14" />
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -296,7 +267,6 @@
     <MESSAGE value="add servis unique_slug" />
     <MESSAGE value="updating the my profile block.&#10;&#10;Changing the model to a more suitable project structure. &#10;&#10;Changing forms, wiews, and urls for CBV" />
     <MESSAGE value="add Mixinlogin, templaces messege, mixinMessage" />
-    <MESSAGE value="fix gitignore" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="add Mixinlogin, templaces messege, mixinMessage" />
   </component>
 </project>

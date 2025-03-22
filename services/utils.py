@@ -14,3 +14,37 @@ def unique_slugify(instance, slug, slug_field):
         unique_slug = f'{slugify(slug)}-{uuid4().hex[:8]}'
     return unique_slug
 
+
+class FormStyleMixin:
+    """
+    Миксин для добавления стилей ко всем полям формы.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'autocomplete': 'off'
+            })
+
+
+class PlaceholderAndStyleMixin:
+    """
+    Миксин для автоматического добавления плейсхолдеров и стилей полям формы.
+    """
+    placeholders = {}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if field_name in self.placeholders:
+                field.widget.attrs.update({
+                    'placeholder': self.placeholders[field_name]
+                })
+            # Общие атрибуты для всех полей
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'autocomplete': 'off'
+            })
