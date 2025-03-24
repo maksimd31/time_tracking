@@ -80,7 +80,7 @@ from .forms import UserLoginForm, UserRegisterForm, UserUpdateForm, ProfileUpdat
 
 
 
-class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
+class ChangePasswordView(LoginRequiredMixin,SuccessMessageMixin, PasswordChangeView):
     """
     Представление для смены пароля
     """
@@ -152,6 +152,7 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
     template_name = 'accounts/user_register.html'
     success_message = 'Вы успешно зарегистрировались. Можете войти на сайт!'
 
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Регистрация на сайте'
@@ -178,4 +179,6 @@ class UserLogoutView(LogoutView):
     Выход с сайта
     """
     next_page = 'home'
+
+
 

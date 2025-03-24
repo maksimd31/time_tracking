@@ -1,4 +1,3 @@
-
 from django.contrib.sitemaps.views import sitemap
 from time_tracking_main.sitemaps import TimeIntervalSitemap
 from django.urls import re_path
@@ -11,21 +10,20 @@ sitemaps = {
     'TimeInterval': TimeIntervalSitemap,
 }
 
-
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include("time_tracking_main.urls")),
-    path('', include('accounts.urls')),
+                  path('admin/', admin.site.urls),
+                  path("accounts/", include("django.contrib.auth.urls")),
 
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps},name='django.contrib.sitemaps.views.sitemap'),
+                  path('', include("time_tracking_main.urls")),
+                  path('', include('accounts.urls')),
+                  path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+                  re_path(r'^oauth/', include('social_django.urls', namespace='social')),  # google
 
-    re_path(r'^oauth/', include('social_django.urls', namespace='social')), #google
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     # urlpatterns += [path('__debug__/', include('debug_toolbar.urls'))]
-
 
 # http://127.0.0.1:8000/accounts/login/
 
@@ -37,4 +35,3 @@ if settings.DEBUG:
 # accounts/password_reset/done/ [name='password_reset_done']
 # accounts/reset/<uidb64>/<token>/ [name='password_reset_confirm']
 # accounts/reset/done/ [name='password_reset_complete']
-

@@ -1,4 +1,4 @@
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, PasswordResetForm
 
 from services.utils import FormStyleMixin, PlaceholderAndStyleMixin
 from .validators import validate_latin_characters
@@ -153,4 +153,11 @@ class CustomPasswordChangeForm(PlaceholderAndStyleMixin, FormStyleMixin, Passwor
         'old_password': 'Старый пароль',
         'new_password1': 'Новый пароль',
         'new_password2': 'Повторите новый пароль',
+    }
+
+
+class CustomPasswordResetForm(PlaceholderAndStyleMixin, FormStyleMixin, PasswordResetForm):
+
+    placeholders = {
+        'email' : 'Введите адрес своей почты'
     }
