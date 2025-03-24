@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, PasswordResetForm
 
-from services.utils import FormStyleMixin, PlaceholderAndStyleMixin
+from services.utils import FormStyleMixin, PlaceholderAndStyleMixin, RememberMeMixin
 from .validators import validate_latin_characters
 from django.contrib.auth.models import User
 from .models import Profile
@@ -135,14 +135,17 @@ class UserRegisterForm(PlaceholderAndStyleMixin,FormStyleMixin, UserCreationForm
     }
 
 
-class UserLoginForm(PlaceholderAndStyleMixin, FormStyleMixin, AuthenticationForm):
+class UserLoginForm(RememberMeMixin,PlaceholderAndStyleMixin, FormStyleMixin, AuthenticationForm):
     """
     Форма авторизации на сайте
     """
+
     placeholders = {
         'username': 'Логин',
         'password': 'Пароль'
     }
+
+
 
 
 class CustomPasswordChangeForm(PlaceholderAndStyleMixin, FormStyleMixin, PasswordChangeForm):

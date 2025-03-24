@@ -1,3 +1,4 @@
+from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.views.generic import DetailView, UpdateView
@@ -168,10 +169,27 @@ class UserLoginView(SuccessMessageMixin, LoginView):
     next_page = 'home'
     success_message = 'Добро пожаловать!'
 
+    def form_valid(self, form):
+        """
+        Если форма валидна, обработать 'remember_me' и выполнить вход.
+        """
+        remember_me = form.cleaned_data.get('remember_me')
+        login(self.request, form.get_user())
+        if not remember_me:
+            self.request.session.set_expiry(0)
+        else:
+            self.request.session.set_expiry(None)
+
+        return super().form_valid(form)
+
     def get_context_data(self, **kwargs):
+        """
+        Передача дополнительных данных в контекст.
+        """
         context = super().get_context_data(**kwargs)
         context['title'] = 'Вход на сайт'
         return context
+
 
 
 class UserLogoutView(LogoutView):

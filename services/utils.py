@@ -1,4 +1,6 @@
 from uuid import uuid4
+
+from django import forms
 from pytils.translit import slugify
 
 
@@ -48,3 +50,27 @@ class PlaceholderAndStyleMixin:
                 'class': 'form-control',
                 'autocomplete': 'off'
             })
+
+
+class RememberMeMixin:
+    """
+    Миксин для автоматической настройки поля 'remember_me' в форме.
+    """
+    remember_me_field = {
+        'required': False,
+        'label': 'Запомнить меня',
+        'widget': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Автоматически добавляем поле 'remember_me'
+        self.fields['remember_me'] = forms.BooleanField(**self.remember_me_field)
+
+    def process_remember_me(self, cleaned_data):
+        """
+        Метод для обработки значения 'remember_me'.
+        """
+        return cleaned_data.get('remember_me', False)
+
+
