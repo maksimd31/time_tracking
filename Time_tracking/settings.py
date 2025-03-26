@@ -54,12 +54,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'time_tracking_main',
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'django.contrib.postgres',
     'accounts.apps.AccountsConfig',
     'social_django',
+    'time_tracking_main.apps.TimeTrackingMainConfig'
 
 
 
@@ -167,8 +167,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_URL = "/static/"
+# STATIC_ROOT = BASE_DIR / 'static'
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+if DEBUG:
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+    STATIC_ROOT = None  # Не используем STATIC_ROOT в режиме отладки
+else:
+    STATICFILES_DIRS = []  # Не указываем дополнительные пути
+    STATIC_ROOT = BASE_DIR / 'static'  # Используем папку для collectstatic
+
 
 
 # Default primary key field type

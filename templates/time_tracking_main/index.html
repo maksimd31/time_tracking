@@ -4,60 +4,19 @@
 
 {% block content %}
 
-{% if user.is_authenticated %}
+    {#    {% if user.is_authenticated %}#}
 
-Привет {{ user.username }}!
-
-
-<p>
-    Дата (день/месяц/год) -{% now 'j/m/Y' %}
-</p>
-<p>
-    Время (час:мин:сек) -{% now 'H:i:s' %}
-</p>
-
-{% if messages %}
-    <ul>
-      {% for message in messages %}
-        <li>{{ message }}</li>
-      {% endfor %}
-    </ul>
-{% endif %}
+    Привет {{ user.username }}!
 
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover table-bordered">
-        <thead class="table-dark">
-        <tr>
-            <th scope="col">Старт</th>
-            <th scope="col">Стоп</th>
-            <th scope="col">Длительность</th>
-        </tr>
-        </thead>
-        <tbody>
-    {% for times in time %}
-    <tr>
-        <td>{{ times.start_time | format_time}}</td>
-        <td>
-            {% if times.end_time %}
-                {{ times.end_time | format_time}}
-            {% else %}
-                Идет запись интервала
-            {% endif %}
-        </td>
-        <td>{{ times.duration | duration_format}}</td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="3">Нет интервалов для этой даты.</td>
-    </tr>
-    {% endfor %}
-</tbody>
-{% else %}
-        <p>Вы не вошли в систему</p>
-        <p>Войти</p>
-        <a href="{% url 'login' %}"> Войти</a>
+    <p>
+        Дата (день/месяц/год) -{% now 'j/m/Y' %}
+    </p>
+    <p>
+        Время (час:мин:сек) -{% now 'H:i:s' %}
+    </p>
 
-{% endif %}
+
+    {% include 'includes/time_table_info.html' %}
 
 {% endblock %}

@@ -1,0 +1,41 @@
+{% load custom_filters %}
+
+<h2>Интервалы времени для {{ selected_date }}</h2>
+
+<form method="get" action="{% url 'time_interval_view' %}">
+    <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+    <button type="submit">Выбрать дату</button>
+</form>
+
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Старт</th>
+            <th scope="col">Стоп</th>
+            <th scope="col">Длительность</th>
+        </tr>
+        </thead>
+        <tbody>
+    {% for interval in intervals %}
+    <tr>
+        <td>{{ interval.start_time }}</td>
+        <td>
+            {% if interval.end_time %}
+                {{ interval.end_time }}
+            {% else %}
+                Идет запись интервала
+            {% endif %}
+        </td>
+        <td>{{ interval.duration | duration_format }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="3">Нет интервалов для этой даты.</td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+    </table>
+</div>

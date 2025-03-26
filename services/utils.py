@@ -3,7 +3,6 @@ from uuid import uuid4
 from django import forms
 from pytils.translit import slugify
 
-
 def unique_slugify(instance, slug, slug_field):
     """
     Генератор уникальных SLUG для моделей, в случае существования такого SLUG.
@@ -72,5 +71,3 @@ class RememberMeMixin:
         Метод для обработки значения 'remember_me'.
         """
         return cleaned_data.get('remember_me', False)
-
-
