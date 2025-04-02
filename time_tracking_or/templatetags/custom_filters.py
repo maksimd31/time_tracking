@@ -3,7 +3,6 @@ from django.utils import timezone
 from datetime import timedelta
 import pytz
 
-
 register = template.Library()
 
 
@@ -36,3 +35,21 @@ def duration_format(duration):
         return f"{hours} ч {str(minutes).zfill(2)} мин {str(seconds).zfill(2)} секунд"
 
     return "00:00:00"
+
+
+@register.filter
+def get_summary_interval_count(daily_summaries, selected_date):
+    summary = daily_summaries.filter(date=selected_date).first()
+    if summary:
+        return  summary.interval_count
+
+    return "Нет данных"
+
+
+@register.filter
+def get_summary_total_time(daily_summaries, selected_date):
+    summary = daily_summaries.filter(date=selected_date).first()
+    if summary:
+        return duration_format(summary.total_time)
+
+    return "Нет данных"

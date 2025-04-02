@@ -4,28 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add remember_me, bugfix auth">
-      <change afterPath="$PROJECT_DIR$/realtime.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js/realtime.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/includes/info.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/includes/time_interval.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/includes/time_table_info.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/time_tracking_main/your_template.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Time_tracking/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Time_tracking/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/migrations/0002_alter_timeinterval_duration.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/migrations/0003_alter_timeinterval_duration.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/migrations/0004_alter_timeinterval_end_time_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/migrations/0005_alter_timeinterval_end_time_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_main/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_main/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_main/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_main/views.py" afterDir="false" />
-    </list>
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="fix bug static js, add real time js, add clss start time CBV, stop time CBV" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -62,24 +41,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Django Server.time_tracking.executor": "Run",
-    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "django.template.preview.state": "SHOW_EDITOR",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/ms/PycharmProjects/time_tracking/static/js",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Django Server.time_tracking.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/ms/PycharmProjects/time_tracking/static/js&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/static/js" />
@@ -157,6 +136,7 @@
       <workItem from="1742455447520" duration="10644000" />
       <workItem from="1742741728105" duration="13248000" />
       <workItem from="1742828887310" duration="18018000" />
+      <workItem from="1743005872130" duration="2393000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -278,7 +258,15 @@
       <option name="project" value="LOCAL" />
       <updated>1742828788082</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="fix bug static js, add real time js, add clss start time CBV, stop time CBV">
+      <option name="closed" value="true" />
+      <created>1743007236396</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1743007236396</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -314,6 +302,7 @@
     <MESSAGE value="add FormStyleMixin,PlaceholderAndStyleMixin,&#10;mixins have been added, according to the dry principle" />
     <MESSAGE value="update auth for CBV" />
     <MESSAGE value="add remember_me, bugfix auth" />
-    <option name="LAST_COMMIT_MESSAGE" value="add remember_me, bugfix auth" />
+    <MESSAGE value="fix bug static js, add real time js, add clss start time CBV, stop time CBV" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix bug static js, add real time js, add clss start time CBV, stop time CBV" />
   </component>
 </project>

@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'accounts.apps.AccountsConfig',
     'social_django',
-    'time_tracking_main.apps.TimeTrackingMainConfig'
+    'time_tracking_or.apps.TimeTrackingOrConfig',
+
 
 
 

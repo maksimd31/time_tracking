@@ -1,0 +1,28 @@
+
+{% if is_paginated %}
+    <div class="pagination p-3 d-flex justify-content-center">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="page-link" aria-label="Предыдущая">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        {% endif %}
+
+        {% for page_number in page_obj.paginator.get_elided_page_range %}
+            {% if page_number == page_obj.paginator.ELLIPSIS %}
+                <span class="page-link">...</span>
+            {% else %}
+                {% if page_number == page_obj.number %}
+                    <span class="page-link active">{{ page_number }}</span>
+                {% else %}
+                    <a href="?page={{ page_number }}" class="page-link">{{ page_number }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="page-link" aria-label="Следующая">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

@@ -1,0 +1,32 @@
+
+
+{% load static %}
+{% load custom_filters %}
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Дата</th>
+            <th scope="col">Количество интервалов</th>
+            <th scope="col">Итоговое время</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for summary in daily_summaries %}
+            <tr>
+                <td>{{ summary.date }}</td>
+                <td>{{ summary.interval_count }}</td>
+                <td>
+                    {% if summary.total_time %}
+                        {{ summary.total_time|duration_format }}
+                    {% else %}
+                        00:00:00
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% include 'includes/pagination.html' %}
+</div>

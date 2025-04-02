@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static  %}
+{% load static %}
 {% load custom_filters %}
 
 {% block content %}
@@ -43,26 +43,21 @@
         </div>
     </form>
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
 
 
-    <h2>Интервалы времени {{ selected_date }}</h2>
+    <h2>Интервалы времени для {{ selected_date }}</h2>
 
     <form method="get" action="{% url 'time_interval_view' %}">
-        <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+        <label>
+            <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+        </label>
         <button type="submit">Выбрать дату</button>
     </form>
 
 
     <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered">
-            <thead class="table-dark">
+        <table class="table table-striped table-hover table-bordered text-center">
+            <thead class="table-dark text-center">
             <tr>
                 <th scope="col">Старт</th>
                 <th scope="col">Стоп</th>
@@ -70,7 +65,7 @@
             </tr>
             </thead>
             <tbody>
-            {% for interval in intervals %}
+            {% for interval in page_obj %}
                 <tr>
                     <td>{{ interval.start_time }}</td>
                     <td>
@@ -88,39 +83,45 @@
                 </tr>
             {% endfor %}
             </tbody>
-
         </table>
+        {% include 'includes/pagination.html' %}
     </div>
+    {#        <h2>Интервалы времени для {{ selected_date }} (Итоги дня: {{ daily_summaries|get_summary:selected_date }})</h2>#}
+{#    <h2>Интервалы времени для {{ selected_date }} </h2>#}
+    {#    <h2>{{ daily_summaries|get_summary:selected_date|safe }})</h2>#}
+{#    <h2>Количество интервалов {{ daily_summaries|get_summary_interval_count:selected_date }}</h2>#}
+{#    <h2>Общее время за день</h2><h1>{{ daily_summaries|get_summary_total_time:selected_date }}</h1>#}
+
     <h2>Итоги дня</h2>
     <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered">
-            <thead class="table-dark">
+        <table class="table table-striped table-hover table-bordered text-center">
+            <thead class="table-dark text-center">
             <tr>
-                <th scope="col">Дата</th>
                 <th scope="col">Количество интервалов</th>
                 <th scope="col">Итоговое время</th>
             </tr>
             </thead>
             <tbody>
-            {% for summary in daily_summaries %}
-                <tr>
-                    <td><a href="{% url 'intervals_for_date' summary.date %}">{{ summary.date }}</a></td>
-                    <td>{{ summary.interval_count }}</td>
-                    <td>
-                        {% if summary.total_time %}
-                            {{ summary.total_time|duration_format }}
-                        {% else %}
-                            00:00:00
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
+            <tr>
+                <td>{{ daily_summaries|get_summary_interval_count:selected_date }}</td>
+                <td>{{ daily_summaries|get_summary_total_time:selected_date }}</td>
+                {#                        <td>#}
+                {#                            {% if daily_summaries.total_time %}#}
+                {#                                {{ daily_summaries|get_summary_total_time:selected_date}}#}
+                {#                            {% else %}#}
+                {#                                00:00:00#}
+                {#                            {% endif %}#}
+                {#                        </td>#}
+            </tr>
             </tbody>
         </table>
-    </div>
-    </body>
 
+    </div>
+    {#    </body>#}
+    {##}
+    {#    </div>#}
+    {#<h2>Итоги дня</h2>#}
+    {#{% include 'time_tracking_main/daily_summary.html' %}#}
+    {#</body>#}
 
 {% endblock %}
-
-

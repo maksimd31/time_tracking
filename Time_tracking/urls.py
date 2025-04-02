@@ -1,5 +1,5 @@
 from django.contrib.sitemaps.views import sitemap
-from time_tracking_main.sitemaps import TimeIntervalSitemap
+from time_tracking_or.sitemaps import TimeIntervalSitemap
 from django.urls import re_path
 from django.contrib import admin
 from django.urls import path, include
@@ -14,7 +14,7 @@ urlpatterns = [
                   path('admin/', admin.site.urls),
                   path("accounts/", include("django.contrib.auth.urls")),
 
-                  path('', include("time_tracking_main.urls")),
+                  path('', include("time_tracking_or.urls")),
                   path('', include('accounts.urls')),
                   path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
                   re_path(r'^oauth/', include('social_django.urls', namespace='social')),  # google

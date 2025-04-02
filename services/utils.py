@@ -1,7 +1,11 @@
 from uuid import uuid4
 
 from django import forms
+from django.contrib.auth.mixins import LoginRequiredMixin
 from pytils.translit import slugify
+
+from time_tracking_or.models import DailySummary
+
 
 def unique_slugify(instance, slug, slug_field):
     """
@@ -71,3 +75,10 @@ class RememberMeMixin:
         Метод для обработки значения 'remember_me'.
         """
         return cleaned_data.get('remember_me', False)
+
+
+
+class DailySummaryMixin(LoginRequiredMixin):
+    def get_daily_summaries(self):
+        return DailySummary.objects.filter(user=self.request.user).order_by('date')
+
