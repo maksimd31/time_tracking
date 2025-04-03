@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="fix bug static js, add real time js, add clss start time CBV, stop time CBV" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="added the display of date intervals, fix bug postgres tabe, add paginations">
+      <change afterPath="$PROJECT_DIR$/time_tracking_or/templatetags/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/time_tracking_or/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/models.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,23 +54,28 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/ms/PycharmProjects/time_tracking/static/js&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/ms/PycharmProjects/time_tracking/time_tracking_or&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/time_tracking_or" />
       <recent name="$PROJECT_DIR$/static/js" />
       <recent name="$PROJECT_DIR$/static/admin/js" />
       <recent name="$PROJECT_DIR$/templates/time_tracking_main" />
       <recent name="$PROJECT_DIR$/templates/includes" />
-      <recent name="$PROJECT_DIR$/templates/registration" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -137,6 +147,11 @@
       <workItem from="1742741728105" duration="13248000" />
       <workItem from="1742828887310" duration="18018000" />
       <workItem from="1743005872130" duration="2393000" />
+      <workItem from="1743438898915" duration="29402000" />
+      <workItem from="1743673677350" duration="87000" />
+      <workItem from="1743673770837" duration="51000" />
+      <workItem from="1743673828430" duration="19000" />
+      <workItem from="1743673875778" duration="2790000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -266,7 +281,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743007236396</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="added the display of date intervals, fix bug postgres tabe, add paginations">
+      <option name="closed" value="true" />
+      <created>1743613150609</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613150609</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -303,6 +326,7 @@
     <MESSAGE value="update auth for CBV" />
     <MESSAGE value="add remember_me, bugfix auth" />
     <MESSAGE value="fix bug static js, add real time js, add clss start time CBV, stop time CBV" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix bug static js, add real time js, add clss start time CBV, stop time CBV" />
+    <MESSAGE value="added the display of date intervals, fix bug postgres tabe, add paginations" />
+    <option name="LAST_COMMIT_MESSAGE" value="added the display of date intervals, fix bug postgres tabe, add paginations" />
   </component>
 </project>

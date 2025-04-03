@@ -25,6 +25,9 @@ class DailySummary(models.Model):
     interval_count = models.PositiveIntegerField(default=0, verbose_name='Количество интервалов')
     total_time = models.DurationField(default=timezone.timedelta(), verbose_name='Общее время')
     date_create = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    # intervals = models.ManyToManyField(TimeInterval, related_name='daily_summaries')
+
 
     def __str__(self):
         return f"{self.date} - {self.user.username}"
+

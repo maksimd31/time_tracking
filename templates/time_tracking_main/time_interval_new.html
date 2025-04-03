@@ -22,32 +22,28 @@
         </div>
     </form>
 
-    <form method="POST">
-        {% csrf_token %}
-        <h2>Добавить новый интервал вручную</h2>
 
-        <div>
-            <label for="start_time">Начало (HH:MM):</label>
-            <input type="time" id="start_time" name="start_time" required>
-            <!--        <p style="text-indent: 40px;"></p>-->
-            <label for="end_time">Конец (HH:MM):</label>
-            <input type="time" id="end_time" name="end_time" required>
+    <form method="POST" action="{% url 'add_manual_interval' %}">
+    {% csrf_token %}
+    <h2>Добавить новый интервал вручную</h2>
+
+    <div>
+    <label for="start_time">Начало:</label>
+    <input type="time" id="start_time" name="start_time" required>
+    <label for="end_time">Конец:</label>
+    <input type="time" id="end_time" name="end_time" required>
+    <div>
+        <div class="d-grid gap-2">
+            <button class="btn btn-success" type="submit" name="add_manual_interval">Добавить интервал вручную
+            </button>
         </div>
-
-
-        <div>
-            <div class="d-grid gap-2">
-                <button class="btn btn-success" type="submit" name="add_manual_interval">Добавить интервал вручную
-                </button>
-            </div>
-        </div>
-    </form>
+    </div>
 
 
 
     <h2>Интервалы времени для {{ selected_date }}</h2>
 
-    <form method="get" action="{% url 'time_interval_view' %}">
+    <form method="get" action="{% url 'home' %}">
         <label>
             <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
         </label>
@@ -87,10 +83,10 @@
         {% include 'includes/pagination.html' %}
     </div>
     {#        <h2>Интервалы времени для {{ selected_date }} (Итоги дня: {{ daily_summaries|get_summary:selected_date }})</h2>#}
-{#    <h2>Интервалы времени для {{ selected_date }} </h2>#}
+    {#    <h2>Интервалы времени для {{ selected_date }} </h2>#}
     {#    <h2>{{ daily_summaries|get_summary:selected_date|safe }})</h2>#}
-{#    <h2>Количество интервалов {{ daily_summaries|get_summary_interval_count:selected_date }}</h2>#}
-{#    <h2>Общее время за день</h2><h1>{{ daily_summaries|get_summary_total_time:selected_date }}</h1>#}
+    {#    <h2>Количество интервалов {{ daily_summaries|get_summary_interval_count:selected_date }}</h2>#}
+    {#    <h2>Общее время за день</h2><h1>{{ daily_summaries|get_summary_total_time:selected_date }}</h1>#}
 
     <h2>Итоги дня</h2>
     <div class="table-responsive">
@@ -105,13 +101,7 @@
             <tr>
                 <td>{{ daily_summaries|get_summary_interval_count:selected_date }}</td>
                 <td>{{ daily_summaries|get_summary_total_time:selected_date }}</td>
-                {#                        <td>#}
-                {#                            {% if daily_summaries.total_time %}#}
-                {#                                {{ daily_summaries|get_summary_total_time:selected_date}}#}
-                {#                            {% else %}#}
-                {#                                00:00:00#}
-                {#                            {% endif %}#}
-                {#                        </td>#}
+
             </tr>
             </tbody>
         </table>
@@ -125,3 +115,5 @@
     {#</body>#}
 
 {% endblock %}
+
+

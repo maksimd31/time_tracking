@@ -33,7 +33,7 @@ class DailySummaryView(LoginRequiredMixin, ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        return DailySummary.objects.filter(user=self.request.user).order_by('date')
+        return DailySummary.objects.filter(user=self.request.user).order_by('-date')
 
 
 class TimeIntervalView(LoginRequiredMixin, ListView):
@@ -101,14 +101,13 @@ class TimeIntervalView(LoginRequiredMixin, ListView):
         daily_summary.save()
 
 
-
 class StartIntervalView(CreateView):
     """
     Старт интервала
     """
     model = TimeInterval
     fields = ['start_time']
-    success_url = reverse_lazy('time_interval_view')
+    success_url = reverse_lazy('home')
     timezone = pytz.timezone('Europe/Moscow')
 
     def form_valid(self, form):
@@ -131,7 +130,7 @@ class StartIntervalView(CreateView):
 class StopIntervalView(CreateView):
     model = TimeInterval
     fields = ['end_time']
-    success_url = reverse_lazy('time_interval_view')
+    success_url = reverse_lazy('home')
     timezone = pytz.timezone('Europe/Moscow')
 
     def form_valid(self, form):
@@ -151,4 +150,27 @@ class StopIntervalView(CreateView):
             active_interval.save()
         else:
             messages.warning(self.request, "Нет активного интервала для завершения.")
-        return redirect('time_interval_view')
+        return redirect('home')
+
+
+class AddManualIntervalView(LoginRequiredMixin, CreateView):
+    """
+    Класс для добавления интервалов вручную.
+    """
+    model = TimeInterval
+    fields = ['start_time', 'end_time']
+    template_name = 'time_tracking_main/time_interval_new.html'
+    success_url = reverse_lazy('home')
+    login_url = 'login'
+
+    # def form_valid(self, form):
+    #     form.instance.user = self.request.user
+    #     messages.success(self.request, "Интервал успешно добавлен вручную.")
+    #     return super().form_valid(form)
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        form.instance.start_time = form.cleaned_data['start_time']
+        form.instance.end_time = form.cleaned_data['end_time']
+        messages.success(self.request, "Интервал успешно добавлен вручную.")
+        return super().form_valid(form)
