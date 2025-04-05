@@ -1,9 +1,9 @@
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
 from django.urls import reverse
 from services.utils import unique_slugify
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -13,7 +13,7 @@ class Profile(models.Model):
         upload_to='images/avatars/%Y/%m/%d/',
         default='images/avatars/default.jpg',
         blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg','dmg'))])
+        validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg', 'dmg'))])
 
     class Meta:
         """
