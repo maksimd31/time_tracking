@@ -37,11 +37,15 @@ def duration_format(duration):
     return "00:00:00"
 
 
+
 @register.filter
 def get_summary_interval_count(daily_summaries, selected_date):
+    if not hasattr(daily_summaries, 'filter'):  # Проверяем, поддерживает ли объект метод filter
+        return "Нет данных"
+
     summary = daily_summaries.filter(date=selected_date).first()
     if summary:
-        return  summary.interval_count
+        return summary.interval_count
 
     return "Нет данных"
 

@@ -1,15 +1,12 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, DeleteView, UpdateView, DetailView
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.utils.timezone import now, make_aware
 from datetime import datetime, timedelta
 import pytz
-
+from django.http import HttpResponseRedirect
 from services.utils import DailySummaryMixin
 from .models import TimeInterval, DailySummary
 
@@ -25,6 +22,9 @@ class IndexView(LoginRequiredMixin, ListView):
 
 
 class DailySummaryView(LoginRequiredMixin, ListView):
+    """
+    Основное представление для работы с ежедневными сводками.
+    """
     template_name = 'time_tracking_main/daily_summary.html'
     # template_name = 'time_tracking_main/time_interval_new.html'
 
@@ -128,6 +128,9 @@ class StartIntervalView(CreateView):
 
 
 class StopIntervalView(CreateView):
+    """
+    Стоп интервала
+    """
     model = TimeInterval
     fields = ['end_time']
     success_url = reverse_lazy('home')
@@ -174,3 +177,62 @@ class AddManualIntervalView(LoginRequiredMixin, CreateView):
         form.instance.end_time = form.cleaned_data['end_time']
         messages.success(self.request, "Интервал успешно добавлен вручную.")
         return super().form_valid(form)
+
+
+#
+
+class UpdateIntervalView(LoginRequiredMixin, UpdateView):
+    """
+    Класс для обновления интервалов.
+    """
+    model = TimeInterval
+    fields = ['start_time', 'end_time']
+    template_name = 'time_tracking_main/time_interval_new.html'
+    success_url = reverse_lazy('home')
+    login_url = 'login'
+
+    def form_valid(self, form):
+        messages.success(self.request, "Интервал успешно обновлен.")
+        return super().form_valid(form)
+
+
+class IntervalDeteil(LoginRequiredMixin, DetailView):
+    """
+    Класс для отображения деталей интервала.
+    """
+    model = TimeInterval
+    template_name = 'time_tracking_main/interval_detail.html'
+    context_object_name = 'interval'
+    login_url = 'login'
+
+
+
+# class DeleteIntervalView(DeleteView):
+#     model = TimeInterval
+#     template_name = 'time_tracking_main/time_interval_new.html'
+#     success_url = reverse_lazy('home')
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         # Добавьте переменную selected_date в контекст
+#         context['selected_date'] = self.request.GET.get('selected_date', None)
+#         return context
+
+
+
+# не понял не получается сделать методом POST
+class DeleteIntervalView(LoginRequiredMixin,DeleteView):
+    """
+    Класс для удаления интервалов
+    """
+    model = TimeInterval
+    template_name = 'time_tracking_main/time_interval_new.html'
+    success_url = reverse_lazy('home')
+    login_url = 'login'
+
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        return HttpResponseRedirect(self.success_url)
+

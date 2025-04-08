@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="text-center">
+        Редактирование интервала времени
+
+        <form method="post" action="{% url 'update_interval' interval.id %}">
+
+            {% csrf_token %}
+
+            <div>
+                <label for="start_time">Начало:</label>
+                <input type="time" id="start_time" name="start_time" value="{{ interval.start_time|time:'H:i' }}"
+                       required>
+                <label for="end_time">Конец:</label>
+                <input type="time" id="end_time" name="end_time" value="{{ interval.end_time|time:'H:i' }}" required>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-success" type="submit" name="update_interval">Обновить интервал</button>
+                    <a href="{% url 'delete_interval' interval.id %}" class="btn btn-danger">Удалить интервал</a>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+

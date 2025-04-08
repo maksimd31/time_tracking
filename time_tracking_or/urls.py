@@ -1,9 +1,7 @@
 from django.urls import path
-from . import views
-from django.urls import path
 from .views import (
-    TimeIntervalView, StartIntervalView, StopIntervalView, DailySummaryView, AddManualIntervalView)
-# from crm_car_wash.new_time_register import views
+    TimeIntervalView, StartIntervalView, StopIntervalView, DailySummaryView, AddManualIntervalView, DeleteIntervalView,
+    UpdateIntervalView, IntervalDeteil)
 
 urlpatterns = [
     # path('', views.IndexView.as_view(), name='home'),
@@ -12,6 +10,10 @@ urlpatterns = [
     path('time-interval/stop/', StopIntervalView.as_view(), name='stop_interval'),
     path('daily-summary/', DailySummaryView.as_view(), name='daily_summary_view'),
     path('add_manual_interval/', AddManualIntervalView.as_view(), name='add_manual_interval'),
+    path('delete_interval/<int:pk>/', DeleteIntervalView.as_view(), name='delete_interval'),
+    path('interval/<int:pk>/update/', UpdateIntervalView.as_view(), name='update_interval'),
+
+    path('interval_detail/<int:pk>/', IntervalDeteil.as_view(), name='interval_detail'),
 
     # path('time-interval/reset/', ResetIntervalsView.as_view(), name='reset_intervals'),
     # path('time-interval/delete-summary/', DeleteSummaryView.as_view(), name='delete_summary'),
