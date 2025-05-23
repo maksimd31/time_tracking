@@ -17,7 +17,7 @@ urlpatterns = [
                   path('', include("time_tracking_or.urls")),
                   path('', include('accounts.urls')),
                   path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
-                  re_path(r'^oauth/', include('social_django.urls', namespace='social')),  # google
+                  re_path(r'^oauth/', include('social_django.urls', namespace='social')),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
