@@ -3,9 +3,12 @@
 {% load custom_filters %}
 
 {% block content %}
+    <br>
+    <br>
+    {% include 'includes/inegrations.html' %}
 
-    <p id="current-time">Загрузка времени...</p>
-    <script src="{% static 'js/realtime.js' %}"></script>
+<p id="current-time" style="font-size:2rem; text-align:center;">Загрузка времени...</p>
+<script src="{% static 'js/realtime.js' %}"></script>
 
     <form method="post" action="{% url 'start_interval' %}">
         {% csrf_token %}
@@ -51,37 +54,37 @@
         <button type="submit">Выбрать дату</button>
     </form>
 
-{##}
+    {##}
 
-{#    <tbody>#}
-{#    {% for interval in page_obj %}#}
-{#        <tr>#}
-{#            <td>#}
-{#                <a href="{% url 'interval_detail' interval.id %}">#}
-{#                    {{ interval.start_time }}#}
-{#                </a>#}
-{#            </td>#}
-{#            <td>#}
-{#                <a href="{% url 'interval_detail' interval.id %}">#}
-{#                    {% if interval.end_time %}#}
-{#                        {{ interval.end_time }}#}
-{#                    {% else %}#}
-{#                        Идет запись интервала#}
-{#                    {% endif %}#}
-{#                </a>#}
-{#            </td>#}
-{#            <td>#}
-{#                <a href="{% url 'interval_detail' interval.id %}">#}
-{#                    {{ interval.duration | duration_format }}#}
-{#                </a>#}
-{#            </td>#}
-{#        </tr>#}
-{#    {% empty %}#}
-{#        <tr>#}
-{#            <td colspan="3">Нет интервалов для этой даты.</td>#}
-{#        </tr>#}
-{#    {% endfor %}#}
-{#</tbody>#}
+    {#    <tbody>#}
+    {#    {% for interval in page_obj %}#}
+    {#        <tr>#}
+    {#            <td>#}
+    {#                <a href="{% url 'interval_detail' interval.id %}">#}
+    {#                    {{ interval.start_time }}#}
+    {#                </a>#}
+    {#            </td>#}
+    {#            <td>#}
+    {#                <a href="{% url 'interval_detail' interval.id %}">#}
+    {#                    {% if interval.end_time %}#}
+    {#                        {{ interval.end_time }}#}
+    {#                    {% else %}#}
+    {#                        Идет запись интервала#}
+    {#                    {% endif %}#}
+    {#                </a>#}
+    {#            </td>#}
+    {#            <td>#}
+    {#                <a href="{% url 'interval_detail' interval.id %}">#}
+    {#                    {{ interval.duration | duration_format }}#}
+    {#                </a>#}
+    {#            </td>#}
+    {#        </tr>#}
+    {#    {% empty %}#}
+    {#        <tr>#}
+    {#            <td colspan="3">Нет интервалов для этой даты.</td>#}
+    {#        </tr>#}
+    {#    {% endfor %}#}
+    {#</tbody>#}
 
 
     <div class="table-responsive">
@@ -93,7 +96,6 @@
                 <th scope="col">Длительность</th>
 
 
-
             </tr>
             </thead>
             <tbody>
@@ -101,7 +103,7 @@
                 <tr>
                     <td>
                         <a href="{% url 'interval_detail' interval.id %}">
-                        {{ interval.start_time }}</a>
+                            {{ interval.start_time }}</a>
 
                     </td>
                     <td>
@@ -112,22 +114,22 @@
                         {% endif %}
                     </td>
                     <td>{{ interval.duration | duration_format }}</td>
-{#                    <td>#}
-{#                        <form method="post" action="{% url 'delete_interval' interval.id %}">#}
-{#                            {% csrf_token %}#}
-{#                            <button type="submit" class="btn btn-danger">Удалить</button>#}
-{#                        </form>#}
-{#                    </td>#}
-{#                    <td>#}
-{#                        <form method="post" action="{% url 'update_interval' interval.id %}">#}
-{#                            {% csrf_token %}#}
-{#                            <button type="submit" class="btn btn-secondary">Редактировать</button>#}
-{#                        </form>#}
-{#                    </td>#}
+                    {#                    <td>#}
+                    {#                        <form method="post" action="{% url 'delete_interval' interval.id %}">#}
+                    {#                            {% csrf_token %}#}
+                    {#                            <button type="submit" class="btn btn-danger">Удалить</button>#}
+                    {#                        </form>#}
+                    {#                    </td>#}
+                    {#                    <td>#}
+                    {#                        <form method="post" action="{% url 'update_interval' interval.id %}">#}
+                    {#                            {% csrf_token %}#}
+                    {#                            <button type="submit" class="btn btn-secondary">Редактировать</button>#}
+                    {#                        </form>#}
+                    {#                    </td>#}
 
                 </tr>
 
-{#                </tr>#}
+                {#                </tr>#}
             {% empty %}
                 <tr>
                     <td colspan="3">Нет интервалов для этой даты.</td>

@@ -4,12 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="fix bug deploy">
-      <change afterPath="$PROJECT_DIR$/templates/time_tracking_main/detele_time_interval.html" afterDir="false" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add grud timeinterval">
+      <change afterPath="$PROJECT_DIR$/templates/includes/inegrations.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/time_tracking.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/time_tracking.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Time_tracking/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Time_tracking/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/user_login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/user_login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/interval_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/interval_detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,6 +55,7 @@
     &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.pycharm.django.structure.promotion.once.per.project&quot;: &quot;true&quot;,
     &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/ms/PycharmProjects/time_tracking/time_tracking_or&quot;,
@@ -91,7 +94,6 @@
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
-        <env name="DJANGO_SETTINGS_MODULE" value="Time_tracking.settings" />
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="" />
@@ -113,8 +115,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PY-243.25659.43" />
-        <option value="bundled-python-sdk-181015f7ab06-4df51de95216-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.25659.43" />
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159" />
+        <option value="bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159" />
       </set>
     </attachedChunks>
   </component>
@@ -157,6 +159,16 @@
       <workItem from="1744030622539" duration="1061000" />
       <workItem from="1744052565853" duration="200000" />
       <workItem from="1744052818875" duration="4792000" />
+      <workItem from="1744106278801" duration="8126000" />
+      <workItem from="1744214128146" duration="2234000" />
+      <workItem from="1745130669075" duration="608000" />
+      <workItem from="1745328026711" duration="974000" />
+      <workItem from="1747054213092" duration="6221000" />
+      <workItem from="1747737002868" duration="793000" />
+      <workItem from="1747737921231" duration="32000" />
+      <workItem from="1747738806961" duration="683000" />
+      <workItem from="1747912704015" duration="2643000" />
+      <workItem from="1747916126519" duration="4293000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -326,7 +338,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743839806140</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="add grud timeinterval">
+      <option name="closed" value="true" />
+      <created>1744121911690</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1744121911690</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -366,6 +386,7 @@
     <MESSAGE value="added the display of date intervals, fix bug postgres tabe, add paginations" />
     <MESSAGE value="added the ability to add time to your carry-on luggage" />
     <MESSAGE value="fix bug deploy" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix bug deploy" />
+    <MESSAGE value="add grud timeinterval" />
+    <option name="LAST_COMMIT_MESSAGE" value="add grud timeinterval" />
   </component>
 </project>
