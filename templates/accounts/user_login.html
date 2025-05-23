@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <div class="mx-2">
+        {% include 'includes/inegrations.html' %}
+    </div>
     <div class="card mb-3 border-0 nth-shadow">
         <div class="card-body">
             <div class="card-title nth-card-title">
@@ -27,81 +30,80 @@
             </svg>
         </a>
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        {#        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">#}
+        {##}
+        {#        <a href="{% url 'social:begin' 'vk-oauth2' %}" class="btn btn-light mx-2">#}
+        {#            <i class="fa-brands fa-vk" style="font-size: 24px;"></i>#}
+        {#        </a>#}
+        {#    </div>#}
 
-        <a href="{% url 'social:begin' 'vk-oauth2' %}" class="btn btn-light mx-2">
-            <i class="fa-brands fa-vk" style="font-size: 24px;"></i>
-        </a>
-    </div>
 
-    <div>
-        <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
-        <script type="text/javascript">
-            if ('VKIDSDK' in window) {
-                const VKID = window.VKIDSDK;
+        <div>
+            <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+            <script type="text/javascript">
+                if ('VKIDSDK' in window) {
+                    const VKID = window.VKIDSDK;
 
-                VKID.Config.init({
-                    app: 53614393,
-                    redirectUrl: 'https://vremya.fun',
-                    responseMode: VKID.ConfigResponseMode.Callback,
-                    source: VKID.ConfigSource.LOWCODE,
-                    scope: '', // Заполните нужными доступами по необходимости
-                });
-
-                const oneTap = new VKID.OneTap();
-
-                oneTap.render({
-                    container: document.currentScript.parentElement,
-                    showAlternativeLogin: true,
-                    styles: {
-                        borderRadius: 9
-                    }
-                })
-                    .on(VKID.WidgetEvents.ERROR, vkidOnError)
-                    .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
-                        const code = payload.code;
-                        const deviceId = payload.device_id;
-
-                        VKID.Auth.exchangeCode(code, deviceId)
-                            .then(vkidOnSuccess)
-                            .catch(vkidOnError);
+                    VKID.Config.init({
+                        app: 53614393,
+                        redirectUrl: 'https://vremya.fun',
+                        responseMode: VKID.ConfigResponseMode.Callback,
+                        source: VKID.ConfigSource.LOWCODE,
+                        scope: '', // Заполните нужными доступами по необходимости
                     });
 
-                function vkidOnSuccess(data) {
-                    // Обработка полученного результата
-                }
+                    const oneTap = new VKID.OneTap();
 
-                function vkidOnError(error) {
-                    // Обработка ошибки
+                    oneTap.render({
+                        container: document.currentScript.parentElement,
+                        showAlternativeLogin: true,
+                        styles: {
+                            borderRadius: 9
+                        }
+                    })
+                        .on(VKID.WidgetEvents.ERROR, vkidOnError)
+                        .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+                            const code = payload.code;
+                            const deviceId = payload.device_id;
+
+                            VKID.Auth.exchangeCode(code, deviceId)
+                                .then(vkidOnSuccess)
+                                .catch(vkidOnError);
+                        });
+
+                    function vkidOnSuccess(data) {
+                        // Обработка полученного результата
+                    }
+
+                    function vkidOnError(error) {
+                        // Обработка ошибки
+                    }
                 }
+            </script>
+        </div>
+
+        <style>
+            .btn-light {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                padding: 0;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
             }
-        </script>
-    </div>
 
-    <br>
-    <br>
-    {% include 'includes/inegrations.html' %}
+            .bi-google, .fa-vk {
+                width: 24px;
+                height: 24px;
+                transition: transform 0.2s;
+            }
 
-    <style>
-        .btn-light {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px; /* Установите фиксированную ширину для кнопок */
-            height: 50px; /* Установите фиксированную высоту для кнопок */
-            border-radius: 50%; /* Сделать кнопки круглыми */
-        }
-
-        .bi-google, .fa-vk {
-            width: 24px; /* Установите одинаковую ширину для иконок */
-            height: 24px; /* Установите одинаковую высоту для иконок */
-            transition: transform 0.2s; /* Пример анимации */
-        }
-
-        .btn-light:hover .bi-google, .btn-light:hover .fa-vk {
-            transform: scale(1.1); /* Увеличение иконки при наведении */
-        }
-    </style>
+            .btn-light:hover .bi-google, .btn-light:hover .fa-vk {
+                transform: scale(1.1);
+            }
+        </style>
 
 
 {% endblock %}
