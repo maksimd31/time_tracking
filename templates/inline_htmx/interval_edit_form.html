@@ -1,34 +1,48 @@
-
 {% load custom_filters %}
+
+{% if form.non_field_errors %}
 <tr>
-    <td>
-        <form hx-post="{% url 'update_interval' interval.id %}"
-              hx-target="closest tr"
-              hx-swap="outerHTML"
-              hx-include="closest tr">
-            {% csrf_token %}
-            <input type="time" name="start_time" value="{{ interval.start_time|time:'H:i' }}" required>
-    </td>
-    <td>
-        <input type="time" name="end_time" value="{{ interval.end_time|time:'H:i' }}" required>
-    </td>
-    <td>
-        {{ interval.duration|duration_format }}
-    </td>
-    <td>
-        <button type="submit" class="disbtn btn-success"
-                hx-post="{% url 'update_interval' interval.id %}"
-                hx-target="closest tr"
-                hx-swap="outerHTML"
-                hx-include="closest tr">
-            Сохранить
-        </button>
-        <button type="button"
-                hx-get="{% url 'interval_row_htmx' interval.id %}"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Отмена
-        </button>
-        </form>
+    <td colspan="4" style="color: red; text-align: center;">
+        {{ form.non_field_errors|join:' ' }}
     </td>
 </tr>
+{% endif %}
+<tr>
+    <form hx-post="{% url 'update_interval' interval.id %}"
+          hx-target="closest tr"
+          hx-swap="outerHTML"
+          hx-include="closest tr">
+        {% csrf_token %}
+        <td>
+            <input type="time" name="start_time" value="{{ form.start_time.value|default:interval.start_time|time:'H:i' }}" required>
+            {% if form.start_time.errors %}
+                <div style="color: red;">{{ form.start_time.errors.0 }}</div>
+            {% endif %}
+        </td>
+        <td>
+            <input type="time" name="end_time" value="{{ form.end_time.value|default:interval.end_time|time:'H:i' }}" required>
+            {% if form.end_time.errors %}
+                <div style="color: red;">{{ form.end_time.errors.0 }}</div>
+            {% endif %}
+        </td>
+        <td>
+            {{ interval.duration|duration_format }}
+        </td>
+        <td>
+            <button type="submit" class="disbtn btn-success"
+                    hx-post="{% url 'update_interval' interval.id %}"
+                    hx-target="closest tr"
+                    hx-swap="outerHTML"
+                    hx-include="closest tr">
+                Сохранить
+            </button>
+            <button type="button"
+                    hx-get="{% url 'interval_row_htmx' interval.id %}"
+                    hx-target="closest tr"
+                    hx-swap="outerHTML">
+                Отмена
+            </button>
+        </td>
+    </form>
+</tr>
+

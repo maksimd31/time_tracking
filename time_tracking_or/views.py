@@ -11,11 +11,14 @@ import pytz
 from django.http import HttpResponseRedirect
 from services.utils import DailySummaryMixin
 from .models import TimeInterval, DailySummary
+from .forms import TimeIntervalFormEdit
 
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 from django.views import View
 from django.shortcuts import get_object_or_404, render
@@ -205,31 +208,6 @@ class AddManualIntervalView(LoginRequiredMixin, CreateView):
 #         messages.success(self.request, "Интервал успешно обновлен.")
 #         return super().form_valid(form)
 
-from django.template.loader import render_to_string
-from django.http import HttpResponse
-
-
-class UpdateIntervalView(LoginRequiredMixin, UpdateView):
-    model = TimeInterval
-    fields = ['start_time', 'end_time']
-    template_name = 'time_tracking_main/time_interval_new.html'
-    success_url = reverse_lazy('home')
-    login_url = 'login'
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if request.headers.get('HX-Request'):
-            html = render_to_string('inline_htmx/interval_edit_form.html', {'interval': self.object}, request=request)
-            return HttpResponse(html)
-        return super().get(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        if self.request.headers.get('HX-Request'):
-            html = render_to_string('inline_htmx/interval_row.html', {'interval': self.object}, request=self.request)
-            return HttpResponse(html)
-        return response
-
 
 #
 class IntervalDeteil(LoginRequiredMixin, DetailView):
@@ -272,8 +250,8 @@ class IntervalRowHtmxView(View):
 
     def get(self, request, pk):
         interval = get_object_or_404(TimeInterval, pk=pk)
-        return render(request, 'inline_htmx/interval_row.html', {'interval': interval})
-
+        selected_date = interval.date_create.date() if hasattr(interval, 'date_create') else None
+        return render(request, 'inline_htmx/interval_row.html', {'interval': interval, 'selected_date': selected_date})
 
 
 # Декоратор, отключающий проверку CSRF для данного класса (используется для HTMX-запросов)
@@ -283,6 +261,7 @@ class DeleteIntervalViewHTMX(View):
     """
     Класс для обработки HTMX-запросов на удаление интервала.
     """
+
     # Метод обработки HTTP DELETE-запроса
     def delete(self, request, pk):
         # Получаем объект TimeInterval по первичному ключу или возвращаем 404
@@ -291,3 +270,56 @@ class DeleteIntervalViewHTMX(View):
         interval.delete()
         # Возвращаем пустой HTTP-ответ (без содержимого)
         return HttpResponse()
+
+
+class UpdateIntervalView(LoginRequiredMixin, UpdateView):
+    # Модель, с которой работает UpdateView
+    model = TimeInterval
+    # Форма для редактирования интервала
+    form_class = TimeIntervalFormEdit
+    # Шаблон для отображения формы редактирования
+    template_name = 'time_tracking_main/time_interval_new.html'
+    # URL для перенаправления после успешного обновления
+    success_url = reverse_lazy('home')
+    # URL для страницы логина, если пользователь не авторизован
+    login_url = 'login'
+
+    def get(self, request, *args, **kwargs):
+        # Получаем объект интервала по pk из URL
+        self.object = self.get_object()
+        # Получаем дату создания интервала, если она есть
+        selected_date = self.object.date_create.date() if hasattr(self.object, 'date_create') else None
+        # Если запрос пришёл через HTMX
+        if request.headers.get('HX-Request'):
+            # Рендерим HTML-форму для HTMX
+            html = render_to_string(
+                'inline_htmx/interval_edit_form.html',
+                {'interval': self.object, 'form': self.get_form(), 'selected_date': selected_date},
+                request=request
+            )
+            # Возвращаем HTML-ответ для HTMX
+            return HttpResponse(html)
+        # Обычный GET-запрос — стандартное поведение UpdateView
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        start_time = form.cleaned_data['start_time']
+        end_time = form.cleaned_data['end_time']
+        if end_time <= start_time:
+            form.add_error('end_time', 'Время окончания не может быть меньше или равно времени начала!')
+            return self.form_invalid(form)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Получаем объект, если он не определён
+        if not hasattr(self, 'object') or self.object is None:
+            self.object = self.get_object()
+        selected_date = self.object.date_create.date() if hasattr(self.object, 'date_create') else None
+        if self.request.headers.get('HX-Request'):
+            html = render_to_string(
+                'inline_htmx/interval_edit_form.html',
+                {'interval': self.object, 'form': form, 'selected_date': selected_date},
+                request=self.request
+            )
+            return HttpResponse(html, status=400)
+        return super().form_invalid(form)

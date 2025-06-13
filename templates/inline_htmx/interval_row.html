@@ -8,14 +8,16 @@
     <button class="disbtn btn-primary"
             hx-get="{% url 'update_interval' interval.id %}"
             hx-target="closest tr"
-            hx-swap="outerHTML">
-      Редактировать
+            hx-swap="outerHTML"
+            title="Редактировать">
+      <span style="font-size: 1.2em;">✏️</span>
     </button>
     <button class="disbtn btn-danger"
-            hx-get="{% url 'delete_delite_new' interval.id %}"
+            hx-delete="{% url 'interval_delite_htmx' interval.id %}"
             hx-target="closest tr"
-            hx-swap="outerHTML">
-      Удалить
+            hx-swap="outerHTML"
+            title="Удалить">
+      <span style="font-size: 1.2em;">🗑️</span>
     </button>
   </td>
 </tr>
