@@ -17,7 +17,11 @@ urlpatterns = [
                   path('', include("time_tracking_or.urls")),
                   path('', include('accounts.urls')),
                   path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
-                  re_path(r'^oauth/', include('social_django.urls', namespace='social')),
+                  # path('auth/', include('rest_framework_social_oauth2.urls', namespace='rest_framework_social_oauth2')),
+                  # path('social/', include('social_django.urls', namespace='social')),
+                  # path('auth/', include('social_django.urls', namespace='social')),
+                  # re_path(r'^oauth/', include('social_django.urls', namespace='social')),
+                  path('social-auth/', include('social_django.urls', namespace='social')),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

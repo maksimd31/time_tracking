@@ -1,0 +1,22 @@
+{% load custom_filters %}
+
+<tr>
+  <td>{{ interval.start_time|time:"H:i" }}</td>
+  <td>{{ interval.end_time|time:"H:i" }}</td>
+  <td>{{ interval.duration|duration_format }}</td>
+  <td>
+    <button class="disbtn btn-primary"
+            hx-get="{% url 'update_interval' interval.id %}"
+            hx-target="closest tr"
+            hx-swap="outerHTML">
+      Редактировать
+    </button>
+    <button class="disbtn btn-danger"
+            hx-get="{% url 'delete_delite_new' interval.id %}"
+            hx-target="closest tr"
+            hx-swap="outerHTML">
+      Удалить
+    </button>
+  </td>
+</tr>
+

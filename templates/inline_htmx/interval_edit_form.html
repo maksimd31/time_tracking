@@ -1,0 +1,34 @@
+
+{% load custom_filters %}
+<tr>
+    <td>
+        <form hx-post="{% url 'update_interval' interval.id %}"
+              hx-target="closest tr"
+              hx-swap="outerHTML"
+              hx-include="closest tr">
+            {% csrf_token %}
+            <input type="time" name="start_time" value="{{ interval.start_time|time:'H:i' }}" required>
+    </td>
+    <td>
+        <input type="time" name="end_time" value="{{ interval.end_time|time:'H:i' }}" required>
+    </td>
+    <td>
+        {{ interval.duration|duration_format }}
+    </td>
+    <td>
+        <button type="submit" class="disbtn btn-success"
+                hx-post="{% url 'update_interval' interval.id %}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                hx-include="closest tr">
+            Сохранить
+        </button>
+        <button type="button"
+                hx-get="{% url 'interval_row_htmx' interval.id %}"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Отмена
+        </button>
+        </form>
+    </td>
+</tr>

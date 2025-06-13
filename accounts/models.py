@@ -14,6 +14,7 @@ class Profile(models.Model):
         default='images/avatars/default.jpg',
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg', 'dmg'))])
+    bio = models.TextField('О себе', blank=True, null=True)
 
     class Meta:
         """

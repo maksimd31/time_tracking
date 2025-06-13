@@ -2,13 +2,14 @@
 {% load static %}
 {% load custom_filters %}
 
+
 {% block content %}
     <br>
     <br>
     {% include 'includes/inegrations.html' %}
 
-<p id="current-time" style="font-size:2rem; text-align:center;">Загрузка времени...</p>
-<script src="{% static 'js/realtime.js' %}"></script>
+    <p id="current-time" style="font-size:2rem; text-align:center;">Загрузка времени...</p>
+    <script src="{% static 'js/realtime.js' %}"></script>
 
     <form method="post" action="{% url 'start_interval' %}">
         {% csrf_token %}
@@ -86,6 +87,31 @@
     {#    {% endfor %}#}
     {#</tbody>#}
 
+    {#        <div>#}
+    {#            {% for interval in intervals %}#}
+    {#                <tr id="interval-{{ interval.id }}">#}
+    {#                    <td id="interval-{{ interval.id }}-start">#}
+    {#                        <button class="btn btn-secondary btn-sm"#}
+    {#                                hx-get="{% url 'edit_interval_field' interval.id 'start_time' %}"#}
+    {#                                hx-target="#interval-{{ interval.id }}-start"#}
+    {#                                hx-swap="outerHTML">#}
+    {#                            ✏️ Старт#}
+    {#                        </button>#}
+    {#                        {{ interval.start_time }}#}
+    {#                    </td>#}
+    {#                    <td id="interval-{{ interval.id }}-end">#}
+    {#                        <button class="btn btn-secondary btn-sm"#}
+    {#                                hx-get="{% url 'edit_interval_field' interval.id 'end_time' %}"#}
+    {#                                hx-target="#interval-{{ interval.id }}-end"#}
+    {#                                hx-swap="outerHTML">#}
+    {#                            ✏️ Стоп#}
+    {#                        </button>#}
+    {#                        {{ interval.end_time }}#}
+    {#                    </td>#}
+    {#                    <!-- другие столбцы -->#}
+    {#                </tr>#}
+    {#            {% endfor %}#}
+    {#        </div>#}
 
     <div class="table-responsive">
         <table class="table table-striped table-hover table-bordered text-center">
@@ -94,6 +120,7 @@
                 <th scope="col">Старт</th>
                 <th scope="col">Стоп</th>
                 <th scope="col">Длительность</th>
+                <th scope="col">Действие</th>
 
 
             </tr>
@@ -114,22 +141,28 @@
                         {% endif %}
                     </td>
                     <td>{{ interval.duration | duration_format }}</td>
-                    {#                    <td>#}
-                    {#                        <form method="post" action="{% url 'delete_interval' interval.id %}">#}
-                    {#                            {% csrf_token %}#}
-                    {#                            <button type="submit" class="btn btn-danger">Удалить</button>#}
-                    {#                        </form>#}
-                    {#                    </td>#}
-                    {#                    <td>#}
-                    {#                        <form method="post" action="{% url 'update_interval' interval.id %}">#}
-                    {#                            {% csrf_token %}#}
-                    {#                            <button type="submit" class="btn btn-secondary">Редактировать</button>#}
-                    {#                        </form>#}
-                    {#                    </td>#}
+                    <!--  Ячейка кнопок действия -->
+                    <td>
+                        {#Рдактировать                        #}
+                        <button class="disbtn"
+                                hx-get="{% url 'update_interval' interval.id %}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML">
+                            Редактировать
+                        </button>
+
+                        <!-- Кнопка "Delete" -->
+                        <button class="disbtn"
+                                hx-delete="{% url 'interval_delite_htmx' interval.id %}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML"
+                                hx-confirm="Точно удалить интервал?">
+                            Удалить
+                        </button>
+                    </td>
 
                 </tr>
-
-                {#                </tr>#}
+                </tr>
             {% empty %}
                 <tr>
                     <td colspan="3">Нет интервалов для этой даты.</td>
@@ -170,7 +203,31 @@
     {#<h2>Итоги дня</h2>#}
     {#{% include 'time_tracking_main/daily_summary.html' %}#}
     {#</body>#}
+<script>
+    // Функция для массового изменения атрибута у всех элементов с заданным классом
+    function cngElementsAtr(cls, atr, val) {
+        var elems = document.getElementsByClassName(cls); // Получаем все элементы с классом cls
+        for (var i = 0; i < elems.length; i++) {
+            elems[i][atr] = val; // Устанавливаем атрибут atr в значение val
+        }
+    }
 
+    // Слушаем событие htmx:afterRequest (после любого HTMX-запроса)
+    document.body.addEventListener('htmx:afterRequest', (event) => {
+        let path_str = event.detail.pathInfo.requestPath; // Получаем путь запроса
+        if (path_str.includes('create_interval')) { // Если путь содержит create_interval
+            cngElementsAtr('clrtxt', 'value', ''); // Очищаем значения у элементов с классом clrtxt
+        } else if (path_str.includes('update_interval')) { // Если путь содержит update_interval
+            if (event.detail.requestConfig.verb === 'get') { // Если это GET-запрос (открытие формы)
+                cngElementsAtr('disbtn', 'disabled', true); // Делаем кнопки с классом disbtn неактивными
+            } else { // Если это не GET-запрос (например, POST после сохранения)
+                cngElementsAtr('disbtn', 'disabled', false); // Включаем кнопки обратно
+            }
+        } else if (path_str.includes('interval_detail_new')) { // Если путь содержит interval_detail_new
+            cngElementsAtr('disbtn', 'disabled', false); // Включаем кнопки с классом disbtn
+        }
+    });
+</script>
 {% endblock %}
 
 

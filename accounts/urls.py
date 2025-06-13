@@ -1,11 +1,17 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
+from . import views
 from .forms import CustomPasswordResetForm
 from .views import ChangePasswordView
 from .views import ProfileUpdateView, ProfileDetailView, UserRegisterView, UserLoginView, UserLogoutView
 
 urlpatterns = [
+    # path("social-auth/", views.SocialAuthView.as_view(), name="social_auth"),
+
+    # path('vkid/callback/', views.vkid_callback, name='vkid_callback'),
+    path('complete/vk-app/', views.vkid_token, name='vkid_callback'),
+
     path('user/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
     path('user/<slug:slug>/', ProfileDetailView.as_view(), name='profile_detail'),
 

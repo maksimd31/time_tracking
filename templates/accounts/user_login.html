@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js"></script>
+
     <div class="mx-2">
         {% include 'includes/inegrations.html' %}
     </div>
@@ -22,88 +24,160 @@
         <a href="{% url 'password_reset' %}">Забыли пароль?</a>
 
     </div>
-    <div class="container d-flex justify-content-center">
-        <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-light mx-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-google"
-                 viewBox="0 0 16 16">
-                <path d="M15.545 6.558a9.4 9.4 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.7 7.7 0 0 1 5.352 2.082l-2.284 2.284A4.35 4.35 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.8 4.8 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.7 3.7 0 0 0 1.599-2.431H8v-3.08z"/>
-            </svg>
-        </a>
-
-        {#        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">#}
-        {##}
-        {#        <a href="{% url 'social:begin' 'vk-oauth2' %}" class="btn btn-light mx-2">#}
-        {#            <i class="fa-brands fa-vk" style="font-size: 24px;"></i>#}
-        {#        </a>#}
-        {#    </div>#}
+    <a href="{% url 'social:begin' 'vk-oauth2' %}" class="btn btn-light mx-2">Войти через VK</a>
 
 
-        <div>
-            <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
-            <script type="text/javascript">
-                if ('VKIDSDK' in window) {
-                    const VKID = window.VKIDSDK;
+{#    <div>#}
+{#        <!-- Подключение VK ID SDK -->#}
+{#        <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>#}
+{#        <script type="text/javascript">#}
+{#            // Проверяем, что VKIDSDK загружен в window#}
+{#            if ('VKIDSDK' in window) {#}
+{#                // Получаем объект VKIDSDK#}
+{#                const VKID = window.VKIDSDK;#}
+{##}
+{#                // Инициализация конфигурации VK ID#}
+{#                VKID.Config.init({#}
+{#                    app: 53649137, // ID вашего приложения VK#}
+{#                    redirectUrl: 'https://f046-92-42-96-168.ngrok-free.app/vkid/callback/', // URL для редиректа после авторизации#}
+{#                    responseMode: VKID.ConfigResponseMode.Callback, // Режим ответа — callback#}
+{#                    source: VKID.ConfigSource.LOWCODE, // Источник — lowcode#}
+{#                    scope: 'email', // Запрашиваемые права доступа#}
+{#                });#}
+{##}
+{#                // Создаём список OAuth-провайдеров#}
+{#                const oAuth = new VKID.OAuthList();#}
+{##}
+{#                // Рендерим виджет авторизации#}
+{#                oAuth.render({#}
+{#                    container: document.currentScript.parentElement, // Контейнер для виджета#}
+{#                    oauthList: [#}
+{#                        'vkid',     // VK ID#}
+{#                        'mail_ru',  // Mail.ru#}
+{#                        'ok_ru'     // Одноклассники#}
+{#                    ]#}
+{#                })#}
+{#                    // Обработка ошибок виджета#}
+{#                    .on(VKID.WidgetEvents.ERROR, vkidOnError)#}
+{#                    // Обработка успешного входа через VK ID#}
+{#                    .on(VKID.OAuthListInternalEvents.LOGIN_SUCCESS, function (payload) {#}
+{#                        const code = payload.code; // Получаем code из payload#}
+{#                        const deviceId = payload.device_id; // Получаем device_id из payload#}
+{##}
+{#                        // Отправляем code и device_id на backend для обмена на access_token#}
+{#                        fetch('/accounts/vkid/token/', {#}
+{#                            method: 'POST',#}
+{#                            headers: {#}
+{#                                'Content-Type': 'application/json',#}
+{#                                'X-CSRFToken': getCookie('csrftoken') // CSRF-токен для Django#}
+{#                            },#}
+{#                            body: JSON.stringify({code: code, device_id: deviceId}) // Тело запроса#}
+{#                        })#}
+{#                            .then(response => response.json()) // Парсим ответ как JSON#}
+{#                            .then(vkidOnSuccess) // Обработка успешного ответа#}
+{#                            .catch(vkidOnError); // Обработка ошибки#}
+{#                    });#}
+{##}
+{#                // Функция обработки успешной авторизации#}
+{#                function vkidOnSuccess(data) {#}
+{#                    if (data && data.access_token) {#}
+{#                        window.location.href = '/'; // Редирект на главную страницу#}
+{#                    } else {#}
+{#                        alert('Ошибка авторизации через VK ID: ' + (data && data.error_description ? data.error_description : ''));#}
+{#                    }#}
+{#                }#}
+{##}
+{#                // Функция обработки ошибок VK ID#}
+{#                function vkidOnError(error) {#}
+{#                    alert('Ошибка VK ID: ' + (error && error.message ? error.message : error));#}
+{#                }#}
+{##}
+{#                // Получение значения cookie по имени (для CSRF)#}
+{#                function getCookie(name) {#}
+{#                    let cookieValue = null;#}
+{#                    if (document.cookie && document.cookie !== '') {#}
+{#                        const cookies = document.cookie.split(';');#}
+{#                        for (let i = 0; i < cookies.length; i++) {#}
+{#                            const cookie = cookies[i].trim();#}
+{#                            if (cookie.substring(0, name.length + 1) === (name + '=')) {#}
+{#                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));#}
+{#                                break;#}
+{#                            }#}
+{#                        }#}
+{#                    }#}
+{#                    return cookieValue;#}
+{#                }#}
+{#            }#}
+{#        </script>#}
+{#    </div>#}
 
-                    VKID.Config.init({
-                        app: 53614393,
-                        redirectUrl: 'https://vremya.fun',
-                        responseMode: VKID.ConfigResponseMode.Callback,
-                        source: VKID.ConfigSource.LOWCODE,
-                        scope: '', // Заполните нужными доступами по необходимости
-                    });
 
-                    const oneTap = new VKID.OneTap();
+<div>
+  <!-- Подключаем VK ID SDK -->
+  <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+  <script type="text/javascript">
+    // Проверяем, что VKIDSDK загружен в window
+    if ('VKIDSDK' in window) {
+      // Получаем объект VKIDSDK
+      const VKID = window.VKIDSDK;
 
-                    oneTap.render({
-                        container: document.currentScript.parentElement,
-                        showAlternativeLogin: true,
-                        styles: {
-                            borderRadius: 9
-                        }
-                    })
-                        .on(VKID.WidgetEvents.ERROR, vkidOnError)
-                        .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
-                            const code = payload.code;
-                            const deviceId = payload.device_id;
+      // Инициализируем VK ID SDK с параметрами приложения
+      VKID.Config.init({
+        app: 53649137, // ID вашего VK-приложения
+        redirectUrl: 'https://f046-92-42-96-168.ngrok-free.app/complete/vk-app', // URL для редиректа после авторизации
+        responseMode: VKID.ConfigResponseMode.Callback, // Режим ответа — callback
+        source: VKID.ConfigSource.LOWCODE, // Источник — lowcode
+        scope: 'email', // Запрашиваемые права доступа
+      });
 
-                            VKID.Auth.exchangeCode(code, deviceId)
-                                .then(vkidOnSuccess)
-                                .catch(vkidOnError);
-                        });
+      // Создаём список OAuth-провайдеров
+      const oAuth = new VKID.OAuthList();
 
-                    function vkidOnSuccess(data) {
-                        // Обработка полученного результата
-                    }
+      // Рендерим виджет авторизации VK ID
+      oAuth.render({
+        container: document.currentScript.parentElement, // Контейнер для виджета
+        oauthList: [
+          'vkid',     // VK ID
+          'mail_ru',  // Mail.ru
+          'ok_ru'     // Одноклассники
+        ]
+      })
+      // Обработка ошибок виджета
+      .on(VKID.WidgetEvents.ERROR, vkidOnError)
+      // Обработка успешного входа через VK ID
+      .on(VKID.OAuthListInternalEvents.LOGIN_SUCCESS, function (payload) {
+        // Получаем code, device_id и code_verifier из payload
+        const code = payload.code;
+        const deviceId = payload.device_id;
+        const codeVerifier = payload.code_verifier;
 
-                    function vkidOnError(error) {
-                        // Обработка ошибки
-                    }
-                }
-            </script>
-        </div>
+        // Отправляем code, device_id и code_verifier на backend для обмена на access_token
+        fetch('/accounts/vkid/token/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({code, device_id: deviceId, code_verifier: codeVerifier})
+        })
+        // Парсим ответ как JSON
+        .then(response => response.json())
+        // Обрабатываем ответ от backend
+        .then(data => {
+          if (data.success) {
+            // Если успех — редирект на главную страницу
+            window.location.href = '/';
+          } else {
+            // Если ошибка — показываем alert с сообщением
+            alert('Ошибка: ' + data.message);
+          }
+        });
+      });
 
-        <style>
-            .btn-light {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                padding: 0;
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            }
-
-            .bi-google, .fa-vk {
-                width: 24px;
-                height: 24px;
-                transition: transform 0.2s;
-            }
-
-            .btn-light:hover .bi-google, .btn-light:hover .fa-vk {
-                transform: scale(1.1);
-            }
-        </style>
-
-
+      // Функция обработки ошибок VK ID
+      function vkidOnError(error) {
+        alert('Ошибка VK ID: ' + (error && error.message ? error.message : error));
+      }
+    }
+  </script>
+</div>
 {% endblock %}
+
+

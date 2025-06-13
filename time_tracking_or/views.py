@@ -1,5 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.views.decorators.http import require_http_methods
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView, DetailView
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -9,6 +11,14 @@ import pytz
 from django.http import HttpResponseRedirect
 from services.utils import DailySummaryMixin
 from .models import TimeInterval, DailySummary
+
+from django.http import HttpResponse, JsonResponse
+from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+from django.views import View
+from django.shortcuts import get_object_or_404, render
 
 
 class IndexView(LoginRequiredMixin, ListView):
@@ -180,22 +190,48 @@ class AddManualIntervalView(LoginRequiredMixin, CreateView):
 
 
 #
+#
+# class UpdateIntervalView(LoginRequiredMixin, UpdateView):
+#     """
+#     Класс для обновления интервалов.
+#     """
+#     model = TimeInterval
+#     fields = ['start_time', 'end_time']
+#     template_name = 'time_tracking_main/time_interval_new.html'
+#     success_url = reverse_lazy('home')
+#     login_url = 'login'
+#
+#     def form_valid(self, form):
+#         messages.success(self.request, "Интервал успешно обновлен.")
+#         return super().form_valid(form)
+
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+
 
 class UpdateIntervalView(LoginRequiredMixin, UpdateView):
-    """
-    Класс для обновления интервалов.
-    """
     model = TimeInterval
     fields = ['start_time', 'end_time']
     template_name = 'time_tracking_main/time_interval_new.html'
     success_url = reverse_lazy('home')
     login_url = 'login'
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if request.headers.get('HX-Request'):
+            html = render_to_string('inline_htmx/interval_edit_form.html', {'interval': self.object}, request=request)
+            return HttpResponse(html)
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
-        messages.success(self.request, "Интервал успешно обновлен.")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        if self.request.headers.get('HX-Request'):
+            html = render_to_string('inline_htmx/interval_row.html', {'interval': self.object}, request=self.request)
+            return HttpResponse(html)
+        return response
 
 
+#
 class IntervalDeteil(LoginRequiredMixin, DetailView):
     """
     Класс для отображения деталей интервала.
@@ -206,22 +242,8 @@ class IntervalDeteil(LoginRequiredMixin, DetailView):
     login_url = 'login'
 
 
-
-# class DeleteIntervalView(DeleteView):
-#     model = TimeInterval
-#     template_name = 'time_tracking_main/time_interval_new.html'
-#     success_url = reverse_lazy('home')
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         # Добавьте переменную selected_date в контекст
-#         context['selected_date'] = self.request.GET.get('selected_date', None)
-#         return context
-
-
-
 # не понял не получается сделать методом POST
-class DeleteIntervalView(LoginRequiredMixin,DeleteView):
+class DeleteIntervalView(LoginRequiredMixin, DeleteView):
     """
     Класс для удаления интервалов
     """
@@ -230,9 +252,42 @@ class DeleteIntervalView(LoginRequiredMixin,DeleteView):
     success_url = reverse_lazy('home')
     login_url = 'login'
 
-
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.delete()
         return HttpResponseRedirect(self.success_url)
 
+
+class IntervalDetailNew(DetailView):
+    """ Класс для отображения деталей интервала с использованием HTMX.
+    """
+    model = TimeInterval
+    template_name = 'inline_htmx/interval_row.html'
+
+
+class IntervalRowHtmxView(View):
+    """
+    Класс для обработки HTMX-запросов и возврата строки интервала.
+    """
+
+    def get(self, request, pk):
+        interval = get_object_or_404(TimeInterval, pk=pk)
+        return render(request, 'inline_htmx/interval_row.html', {'interval': interval})
+
+
+
+# Декоратор, отключающий проверку CSRF для данного класса (используется для HTMX-запросов)
+@method_decorator(csrf_exempt, name='dispatch')
+# Класс-представление для удаления интервала через HTMX-запрос
+class DeleteIntervalViewHTMX(View):
+    """
+    Класс для обработки HTMX-запросов на удаление интервала.
+    """
+    # Метод обработки HTTP DELETE-запроса
+    def delete(self, request, pk):
+        # Получаем объект TimeInterval по первичному ключу или возвращаем 404
+        interval = get_object_or_404(TimeInterval, pk=pk)
+        # Удаляем найденный интервал
+        interval.delete()
+        # Возвращаем пустой HTTP-ответ (без содержимого)
+        return HttpResponse()

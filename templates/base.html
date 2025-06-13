@@ -1,31 +1,34 @@
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Время</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
-  </head>
-  <body>
-    {% include 'nav_bar.html' %}
+<!DOCTYPE html> <!-- Объявление типа документа HTML -->
+<html lang="ru"> <!-- Открытие HTML-документа с указанием языка -->
+<head> <!-- Начало секции head -->
+    <meta charset="utf-8"/> <!-- Установка кодировки символов -->
+    <meta name="viewport" content="width=device-width, initial-scale=1"/> <!-- Адаптивность для мобильных устройств -->
+    <title>Время</title> <!-- Заголовок страницы -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous"/>
+    <!-- Подключение Bootstrap CSS -->
+</head> <!-- Конец секции head -->
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'> <!-- Начало тела страницы, установка CSRF-токена для htmx -->
+{% include 'nav_bar.html' %} <!-- Включение навигационной панели -->
 
-    <div class="container">
-      <br />
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            {{ message }}
+<div class="container"> <!-- Контейнер Bootstrap -->
+    <br/> <!-- Перенос строки -->
+    {% if messages %} <!-- Проверка наличия сообщений -->
+    {% endif %} <!-- Конец проверки сообщений -->
+    {% for message in messages %} <!-- Перебор сообщений -->
+        <div class="alert alert-warning alert-dismissible fade show" role="alert"> <!-- Блок для вывода сообщения -->
+            {{ message }} <!-- Текст сообщения -->
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ОК"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-{#        {% include 'includes/messages.html' %}#}
+            <!-- Кнопка закрытия сообщения -->
+        </div>
+    {% endfor %} <!-- Конец перебора сообщений -->
+    {% block content %} <!-- Блок для основного контента страницы -->
+    {% endblock %} <!-- Конец блока контента -->
+</div> <!-- Конец контейнера -->
 
-      {% block content %}
-
-      {% endblock %}
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
-  </body>
-</html>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script> <!-- Подключение Bootstrap JS -->
+<script src="https://unpkg.com/htmx.org@1.9.4"></script> <!-- Подключение библиотеки htmx -->
+</body> <!-- Конец тела страницы -->
+</html> <!-- Конец HTML-документа -->

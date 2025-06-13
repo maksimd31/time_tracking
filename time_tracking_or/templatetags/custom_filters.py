@@ -57,3 +57,26 @@ def get_summary_total_time(daily_summaries, selected_date):
         return duration_format(summary.total_time)
 
     return "Нет данных"
+
+
+
+#
+# @register.filter
+# def get_field_value(obj, field):
+#     return getattr(obj, field)
+
+# # time_tracking_or/templatetags/custom_filters.py
+# from django import template
+#
+# register = template.Library()
+#
+# @register.filter
+# def duration_format(value):
+#     # value — это timedelta
+#     if not value:
+#         return "00:00:00"
+#     total_seconds = int(value.total_seconds())
+#     hours = total_seconds // 3600
+#     minutes = (total_seconds % 3600) // 60
+#     seconds = total_seconds % 60
+#     return f"{hours:02}:{minutes:02}:{seconds:02}"

@@ -12,14 +12,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 from django.urls import re_path
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -31,17 +31,22 @@ SECRET_KEY: str | None = os.getenv("SECRET_KEY")
 # DEBUG = True
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+#
+# if os.getenv('ALLOWED_HOSTS'):
+#     ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').replace(' ', '').split(',')
+# else:
+#     ALLOWED_HOSTS = []
 
-if os.getenv('ALLOWED_HOSTS'):
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').replace(' ', '').split(',')
-else:
-    ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'vremya.fun',
+    'f046-92-42-96-168.ngrok-free.app',
+
+]
 
 if os.getenv('CSRF_TRUSTED_ORIGINS'):
     CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').replace(' ', '').split(',')
-
-
-# ALLOWED_HOSTS = []
 
 SITE_ID = 1
 
@@ -56,13 +61,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django.contrib.sites',
     'django.contrib.sitemaps',
+
     'django.contrib.postgres',
     'accounts.apps.AccountsConfig',
-    'social_django',
     'time_tracking_or.apps.TimeTrackingOrConfig',
-
-
-
+    'oauth2_provider',
+    'social_django',
+    'social_oauth_token',
 
 ]
 
@@ -97,7 +102,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "Time_tracking.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -148,7 +152,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -159,7 +162,6 @@ TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -174,8 +176,6 @@ else:
     STATICFILES_DIRS = []  # Не указываем дополнительные пути
     STATIC_ROOT = BASE_DIR / 'static'  # Используем папку для collectstatic
 
-
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -184,7 +184,6 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False') == 'True'
-
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -211,39 +210,42 @@ LOGIN_URL = '/accounts/login/'
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
+SOCIAL_AUTH_ASSOCIATE_BY_MAIL = True  # Авто-привязка соц. аккаунтов по email, если почта уже есть в базе
+SOCIAL_AUTH_ASSOCIATE_EXISTING = True  # Если пользователь уже зарегистрирован, связывает учетные записи
 
 AUTHENTICATION_BACKENDS = (
+    'social_core.backends.vk.VKOAuth2',  # стандартный VK OAuth2 бекенд
+    'social_core.backends.vk.VKAppOAuth2',
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
-    'social_core.backends.vk.VKOAuth2',
+    'social_core.backends.yandex.YandexOAuth2',
 )
 
-
+# google
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
-
+# vk
 SOCIAL_AUTH_VK_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_VK_OAUTH2_KEY')
 SOCIAL_AUTH_VK_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_VK_OAUTH2_SECRET')
-# SOCIAL_AUTH_VK_OAUTH2_SCOPE = 'email'
-# SOCIAL_AUTH_VK_OAUTH2_SCOPE = os.getenv('SOCIAL_AUTH_VK_OAUTH2_SCOPE')
-# SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email']
+# SOCIAL_AUTH_VK_OAUTH2_USE_PKCE = True
+# SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI = os.getenv('SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI')
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'file': {
-#             'level': 'ERROR',
-#             'class': 'logging.FileHandler',
-#             'filename': 'django_error.log',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file'],
-#             'level': 'ERROR',
-#             'propagate': True,
-#         },
-#     },
-# }
+SOCIAL_AUTH_VK_APP_KEY = os.getenv('SOCIAL_AUTH_VK_OAUTH2_KEY')
+SOCIAL_AUTH_VK_APP_SECRET = os.getenv('SOCIAL_AUTH_VK_OAUTH2_SECRET')
+SOCIAL_AUTH_VK_APP_USER_MODE = 2  # рекомендуемый режим
+
+# yandex
+SOCIAL_AUTH_YANDEX_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_YANDEX_OAUTH2_KEY')
+SOCIAL_AUTH_YANDEX_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_YANDEX_OAUTH2_SECRET')
+
+SOCIAL_AUTH_PIPELINE = (  # Последовательность обработки OAuth-авторизации
+    "social_core.pipeline.social_auth.social_details",  # Получение данных о соц. аккаунте
+    "social_core.pipeline.social_auth.social_uid",  # Определение уникального ID аккаунта
+    "social_core.pipeline.social_auth.auth_allowed",  # Проверка, разрешен ли доступ
+    "social_core.pipeline.social_auth.social_user",  # Получение существующего пользователя (если он уже есть)
+    "social_core.pipeline.social_auth.associate_user",  # Связывание учетной записи
+    "social_core.pipeline.social_auth.load_extra_data",  # Загрузка всех дополнительных данных
+    "social_core.pipeline.user.user_details",  # Обновление информации о пользователе
+)

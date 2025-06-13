@@ -1,6 +1,9 @@
-from django.contrib.auth import login
+import os
+
+from django.contrib.auth import login, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
+from django.http.response import HttpResponseBadRequest
 from django.views.generic import DetailView, UpdateView
 from django.db import transaction
 from .models import Profile
@@ -8,80 +11,23 @@ from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from .forms import UserLoginForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm,CustomPasswordChangeForm
+from .forms import UserLoginForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CustomPasswordChangeForm
+import requests
+from django.conf import settings
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
+import secrets
+from django.shortcuts import render, redirect
 
+from dotenv import load_dotenv
 
+load_dotenv()
 
-# class SignUpView(generic.CreateView):
-#     form_class = SignUpForm
-#     success_url = reverse_lazy("login")
-#     initial = None  # принимает {'key': 'value'}
-#     template_name = "registration2/signup.html"
-#
-#     def dispatch(self, request, *args, **kwargs):
-#         # перенаправит на домашнюю страницу, если пользователь попытается получить доступ к странице регистрации после авторизации
-#         if request.user.is_authenticated:
-#             return redirect(to='/')
-#         return super().dispatch(request, *args, **kwargs)  # Добавлено
-#
-#     def get(self, request, *args, **kwargs):
-#         form = self.form_class(initial=self.initial)
-#         return render(request, self.template_name, {'form': form})
-#
-#     def post(self, request, *args, **kwargs):
-#         form = self.form_class(request.POST)
-#
-#         if form.is_valid():
-#             form.save()
-#
-#             username = form.cleaned_data.get('username')
-#             messages.success(request, f'Вы успешно зарегистрировались {username}')
-#
-#             return redirect(to='login')
-#
-#         return render(request, self.template_name, {'form': form})
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
-# def form_valid(self, form):
-#     response = super().form_valid(form)
-#     messages.success(self.request, "Вы успешно зарегистрировались")
-#     return response
-
-#
-# class CustomLoginView(LoginView):
-#     form_class = LoginForm
-#
-#     def form_valid(self, form):
-#         remember_me = form.cleaned_data.get('remember_me')
-#
-#         if not remember_me:
-#             # Установим время истечения сеанса равным 0 секундам. Таким образом, он автоматически закроет сеанс после закрытия браузера. И обновим данные.
-#             self.request.session.set_expiry(0)
-#             self.request.session.modified = True
-#
-#         # В противном случае сеанс браузера будет таким же как время сеанса cookie "SESSION_COOKIE_AGE", определенное в settings.py
-#         return super(CustomLoginView, self).form_valid(form)
-
-#
-# @login_required
-# def profile(request):
-#     if request.method == 'POST':
-#         user_form = UpdateUserForm(request.POST, instance=request.user)
-#         profile_form = UpdateProfileForm(request.POST, request.FILES, instance=request.user.profile)
-#
-#         if user_form.is_valid() and profile_form.is_valid():
-#             user_form.save()
-#             profile_form.save()
-#             messages.success(request, 'Готово')
-#             return redirect(to='users-profile')
-#     else:
-#         user_form = UpdateUserForm(instance=request.user)
-#         profile_form = UpdateProfileForm(instance=request.user.profile)
-#
-#     return render(request, 'registration2/profile.html', {'user_form': user_form, 'profile_form': profile_form})
-
-
-
-class ChangePasswordView(LoginRequiredMixin,SuccessMessageMixin, PasswordChangeView):
+class ChangePasswordView(LoginRequiredMixin, SuccessMessageMixin, PasswordChangeView):
     """
     Представление для смены пароля
     """
@@ -153,7 +99,6 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
     template_name = 'accounts/user_register.html'
     success_message = 'Вы успешно зарегистрировались. Можете войти на сайт!'
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Регистрация на сайте'
@@ -191,7 +136,6 @@ class UserLoginView(SuccessMessageMixin, LoginView):
         return context
 
 
-
 class UserLogoutView(LogoutView):
     """
     Выход с сайта
@@ -199,4 +143,107 @@ class UserLogoutView(LogoutView):
     next_page = 'home'
 
 
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
+
+# Отключаем проверку CSRF для этого view (для тестирования, в продакшене лучше использовать CSRF!)
+@csrf_exempt
+def vkid_token(request):
+    import json  # Импортируем модуль json для работы с JSON-данными
+    try:
+        # Обработка разных методов запроса
+        if request.method == 'GET':
+            # Получаем параметры из строки запроса (GET)
+            code = request.GET.get('code')
+            device_id = request.GET.get('device_id')
+            code_verifier = request.GET.get('code_verifier')
+        elif request.method == 'POST':
+            # Получаем параметры из тела запроса (POST, JSON)
+            data = json.loads(request.body.decode())
+            code = data.get('code')
+            device_id = data.get('device_id')
+            code_verifier = data.get('code_verifier')
+        else:
+            # Если метод не GET и не POST — возвращаем ошибку
+            return JsonResponse({'success': False, 'message': 'Only GET and POST allowed'}, status=405)
+
+        # Логируем полученные параметры для отладки
+        print('VKID CALLBACK PARAMS:', {'code': code, 'device_id': device_id, 'code_verifier': code_verifier})
+        # Проверяем, что обязательные параметры присутствуют
+        if not code or not device_id:
+            return JsonResponse({'success': False, 'message': 'No code or device_id provided'}, status=400)
+
+        # Получаем client_id и redirect_uri из переменных окружения или настроек Django
+        client_id = os.getenv('SOCIAL_AUTH_VK_OAUTH2_KEY') or getattr(settings, 'SOCIAL_AUTH_VK_OAUTH2_KEY', None)
+        redirect_uri = os.getenv('SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI') or getattr(settings, 'SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI', None)
+
+        # Формируем payload для запроса токена VK ID
+        payload = {
+            'grant_type': 'authorization_code',  # Тип grant-а — авторизационный код
+            'code': code,                        # Код авторизации
+            'device_id': device_id,              # Идентификатор устройства
+            'client_id': client_id,              # ID приложения VK
+            'redirect_uri': redirect_uri,        # Redirect URI, который был указан при авторизации
+        }
+        # Если есть code_verifier (PKCE), добавляем его
+        if code_verifier:
+            payload['code_verifier'] = code_verifier
+        # Заголовки для запроса (тип контента — form-urlencoded)
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        # URL для получения access_token VK ID
+        token_url = 'https://id.vk.com/oauth2/token'
+
+        try:
+            # Делаем POST-запрос к VK ID для обмена кода на access_token
+            resp = requests.post(token_url, data=payload, headers=headers)
+            try:
+                # Пробуем распарсить ответ как JSON
+                resp_json = resp.json()
+            except Exception:
+                # Если не удалось — выводим сырой ответ и возвращаем ошибку
+                print('VKID TOKEN RAW RESPONSE:', resp.text)
+                return JsonResponse({'success': False, 'message': 'VKID token exchange error', 'raw': resp.text, 'status_code': resp.status_code}, status=500)
+
+            # Если запрос успешен и есть access_token
+            if resp.status_code == 200 and 'access_token' in resp_json:
+                access_token = resp_json['access_token']
+                # Получаем информацию о пользователе через VK ID API
+                user_info_resp = requests.get(
+                    'https://id.vk.com/oauth2/user_info',
+                    headers={'Authorization': f'Bearer {access_token}'}
+                )
+                try:
+                    # Пробуем распарсить ответ как JSON
+                    user_info = user_info_resp.json()
+                except Exception:
+                    # Если не удалось — выводим сырой ответ и возвращаем ошибку
+                    print('VKID USER INFO RAW RESPONSE:', user_info_resp.text)
+                    return JsonResponse({'success': False, 'message': 'VKID user info error', 'raw': user_info_resp.text, 'status_code': user_info_resp.status_code}, status=500)
+                # Получаем VK user id из ответа
+                vk_user_id = user_info.get('sub')
+                if not vk_user_id:
+                    # Если нет user id — ошибка
+                    print('NO VK USER ID:', user_info)
+                    return JsonResponse({'success': False, 'message': 'No VK user id'}, status=400)
+                # Получаем модель пользователя Django
+                User = get_user_model()
+                # Ищем пользователя по username или создаём нового
+                user, created = User.objects.get_or_create(username=f'vkid_{vk_user_id}')
+                # Выполняем вход пользователя в Django
+                login(request, user)
+                # Возвращаем успешный ответ с информацией о пользователе
+                return JsonResponse({'success': True, 'user_info': user_info})
+            # Если не получили access_token — выводим ошибку и возвращаем ответ
+            print('VKID TOKEN RESPONSE ERROR:', resp_json)
+            return JsonResponse({'success': False, 'message': resp_json}, status=resp.status_code)
+        except Exception as e:
+            # Ловим ошибки обмена токена или получения user info
+            print('VKID TOKEN EXCHANGE/USER INFO ERROR:', str(e))
+            return JsonResponse({'success': False, 'message': f'VKID token exchange or user info error: {str(e)}'}, status=500)
+    except Exception as e:
+        # Ловим любые другие ошибки
+        print('VKID_TOKEN GENERAL ERROR:', str(e))
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
