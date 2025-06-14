@@ -31,26 +31,39 @@
             <button type="submit" class="btn btn-secondary full-width">Стоп</button>
         </div>
     </form>
-
-
-{#HTMX-атрибуты для кнопок "Старт" и "Стоп" — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически#}
-    <form method="POST" action="{% url 'add_manual_interval' %}">
+    {#HTMX-атрибуты для кнопок "Старт" и "Стоп" — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически#}
+    <form method="POST" action="{% url 'add_manual_interval' %}"
+          hx-post="{% url 'add_manual_interval' %}"
+          hx-target="body"
+          hx-swap="outerHTML">
         {% csrf_token %}
         <h2>Добавить новый интервал вручную</h2>
+        <label for="start_time">Начало:</label>
+        <input type="time" id="start_time" name="start_time" required>
+        <label for="end_time">Конец:</label>
+        <input type="time" id="end_time" name="end_time" required>
+        <div class="d-grid gap-2">
+            <button class="btn btn-success" type="submit" name="add_manual_interval">Добавить интервал вручную</button>
+        </div>
     </form>
 
+    {#    <form method="POST" action="{% url 'add_manual_interval' %}">#}
+    {#        {% csrf_token %}#}
+    {#        <h2>Добавить новый интервал вручную</h2>#}
+    {#    </form>#}
 
-    <div>
-    <label for="start_time">Начало:</label>
-    <input type="time" id="start_time" name="start_time" required>
-    <label for="end_time">Конец:</label>
-    <input type="time" id="end_time" name="end_time" required>
-    <div>
-        <div class="d-grid gap-2">
-            <button class="btn btn-success" type="submit" name="add_manual_interval">Добавить интервал вручную
-            </button>
-        </div>
-    </div>
+
+    {#    <div>#}
+    {#    <label for="start_time">Начало:</label>#}
+    {#    <input type="time" id="start_time" name="start_time" required>#}
+    {#    <label for="end_time">Конец:</label>#}
+    {#    <input type="time" id="end_time" name="end_time" required>#}
+    {#    <div>#}
+    {#        <div class="d-grid gap-2">#}
+    {#            <button class="btn btn-success" type="submit" name="add_manual_interval">Добавить интервал вручную#}
+    {#            </button>#}
+    {#        </div>#}
+    {#    </div>#}
 
 
 
@@ -240,4 +253,5 @@
         });
     </script>
 {% endblock %}
+
 

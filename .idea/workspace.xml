@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add HTMX fitch">
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/inline_htmx/interval_edit_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/inline_htmx/interval_edit_form.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/inline_htmx/interval_row.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/inline_htmx/interval_row.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -183,7 +179,7 @@
       <workItem from="1748599126529" duration="284000" />
       <workItem from="1748599429777" duration="13416000" />
       <workItem from="1748796168244" duration="470000" />
-      <workItem from="1749724651411" duration="22869000" />
+      <workItem from="1749724651411" duration="27020000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -393,7 +389,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749818269453</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически">
+      <option name="closed" value="true" />
+      <created>1749834357022</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1749834357022</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -438,7 +442,8 @@
     <MESSAGE value="add fich VK" />
     <MESSAGE value="fix bug Vk" />
     <MESSAGE value="add HTMX fitch" />
-    <option name="LAST_COMMIT_MESSAGE" value="add HTMX fitch" />
+    <MESSAGE value="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически" />
+    <option name="LAST_COMMIT_MESSAGE" value="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
