@@ -4,14 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="bug fix HTMX fitch">
-      <change afterPath="$PROJECT_DIR$/templates/inline_htmx/inline_htmx.html" afterDir="false" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="bug fix UserLoginView -&gt; fix remember_me">
+      <change afterPath="$PROJECT_DIR$/CHANGELOG.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Time_tracking/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Time_tracking/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/includes/messages.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/includes/messages.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/inline_htmx/interval_edit_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/inline_htmx/interval_edit_form.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -189,7 +185,7 @@
       <workItem from="1750087480506" duration="1629000" />
       <workItem from="1750089149778" duration="5652000" />
       <workItem from="1750327231703" duration="36000" />
-      <workItem from="1750327276517" duration="332000" />
+      <workItem from="1750327276517" duration="2033000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -415,7 +411,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749901313405</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="bug fix UserLoginView -&gt; fix remember_me">
+      <option name="closed" value="true" />
+      <created>1750327898339</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1750327898339</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -462,7 +466,8 @@
     <MESSAGE value="add HTMX fitch" />
     <MESSAGE value="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически" />
     <MESSAGE value="bug fix HTMX fitch" />
-    <option name="LAST_COMMIT_MESSAGE" value="bug fix HTMX fitch" />
+    <MESSAGE value="bug fix UserLoginView -&gt; fix remember_me" />
+    <option name="LAST_COMMIT_MESSAGE" value="bug fix UserLoginView -&gt; fix remember_me" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
