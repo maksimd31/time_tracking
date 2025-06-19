@@ -1,7 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.template.loader import render_to_string
 from django.urls import reverse_lazy
-from django.views.decorators.http import require_http_methods
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView, DetailView
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -9,19 +7,15 @@ from django.utils.timezone import now, make_aware
 from datetime import datetime, timedelta
 import pytz
 from django.http import HttpResponseRedirect
-from services.utils import DailySummaryMixin
 from .models import TimeInterval, DailySummary
 from .forms import TimeIntervalFormEdit
-
-from django.http import HttpResponse, JsonResponse
-from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-
 from django.views import View
 from django.shortcuts import get_object_or_404, render
+from django.contrib.messages import get_messages
 
 
 class IndexView(LoginRequiredMixin, ListView):
@@ -272,54 +266,230 @@ class DeleteIntervalViewHTMX(View):
         return HttpResponse()
 
 
-class UpdateIntervalView(LoginRequiredMixin, UpdateView):
-    # Модель, с которой работает UpdateView
+# class UpdateIntervalView(LoginRequiredMixin, View):
+#     model = TimeInterval
+#     form_class = TimeIntervalFormEdit
+#     template_name = 'time_tracking_main/time_interval_new.html'
+#     success_url = reverse_lazy('home')
+#     login_url = 'login'
+#
+#     def get_object(self):
+#         pk = self.kwargs.get('pk')
+#         return get_object_or_404(TimeInterval, pk=pk)
+#
+#     def get_form(self, instance=None):
+#         if instance is None:
+#             instance = self.get_object()
+#         return self.form_class(instance=instance)
+#
+#     def get(self, request, *args, **kwargs):
+#         obj = self.get_object()
+#         selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
+#         form = self.get_form(instance=obj)
+#         if request.headers.get('HX-Request'):
+#             html = render_to_string(
+#                 'inline_htmx/interval_edit_form.html',
+#                 {'interval': obj, 'form': form, 'selected_date': selected_date},
+#                 request=request
+#             )
+#             return HttpResponse(html)
+#         return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
+#
+#     def form_valid(self, form, obj, selected_date, request):
+#         start_time = form.cleaned_data['start_time']
+#         end_time = form.cleaned_data['end_time']
+#         if end_time <= start_time:
+#             messages.warning(request, f'Время окончания не может быть меньше или равно времени начала! {end_time}')
+#             if request.headers.get('HX-Request'):
+#                 html = render_to_string(
+#                     'inline_htmx/interval_edit_form.html',
+#                     {'interval': obj, 'form': form, 'selected_date': selected_date},
+#                     request=request
+#                 )
+#                 return HttpResponse(html, status=400)
+#             return render(request, self.template_name,
+#                           {'form': form, 'interval': obj, 'selected_date': selected_date})
+#         form.save()
+#         if request.headers.get('HX-Request'):
+#             html = render_to_string(
+#                 'inline_htmx/interval_row.html',
+#                 {'interval': obj, 'selected_date': selected_date},
+#                 request=request
+#             )
+#             return HttpResponse(html)
+#
+#         if request.headers.get('HX-Request'):
+#             storage = get_messages(request)
+#             html = render_to_string('inline_htmx/messages.html', {'messages': storage}, request=request)
+#             return HttpResponse(html, status=400, headers={'HX-Trigger': 'show-messages'})
+#
+#         return redirect(self.success_url)
+#
+#     def post(self, request, *args, **kwargs):
+#         obj = self.get_object()
+#         form = self.form_class(request.POST, instance=obj)
+#         selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
+#         if form.is_valid():
+#             return self.form_valid(form, obj, selected_date, request)
+#         else:
+#             if request.headers.get('HX-Request'):
+#                 html = render_to_string(
+#                     'inline_htmx/interval_edit_form.html',
+#                     {'interval': obj, 'form': form, 'selected_date': selected_date},
+#                     request=request
+#                 )
+#                 return HttpResponse(html, status=400)
+#             return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
+#
+# --- Новый класс UpdateIntervalView на View (минималистичный, только HTMX) ---
+class UpdateIntervalView(LoginRequiredMixin, View):
+    # Обработка POST-запроса для обновления интервала
+    def post(self, request, pk):
+        interval = get_object_or_404(TimeInterval, pk=pk)
+        form = TimeIntervalFormEdit(request.POST, instance=interval)
+        if form.is_valid():
+            start_time = form.cleaned_data.get('start_time')
+            end_time = form.cleaned_data.get('end_time')
+            if end_time is not None and start_time is not None and end_time <= start_time:
+                messages.warning(request, 'Время окончания не может быть меньше или равно времени начала!')
+                if request.headers.get('HX-Request'):
+                    html = render_to_string(
+                        'inline_htmx/interval_edit_form.html',
+                        {
+                            'interval': interval,
+                            'form': form,
+                            'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
+                        },
+                        request=request
+                    )
+                    return HttpResponse(html, status=400)
+                return render(request, 'time_tracking_main/time_interval_new.html', {'form': form, 'interval': interval})
+            form.save()
+            if request.headers.get('HX-Request'):
+                html = render_to_string(
+                    'inline_htmx/interval_row.html',
+                    {
+                        'interval': interval,
+                        'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
+                    },
+                    request=request
+                )
+                return HttpResponse(html)
+            return redirect('home')
+        else:
+            if request.headers.get('HX-Request'):
+                messages.warning(request, 'Ошибка валидации формы!')
+                html = render_to_string(
+                    'inline_htmx/interval_edit_form.html',
+                    {
+                        'interval': interval,
+                        'form': form,
+                        'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
+                    },
+                    request=request
+                )
+                return HttpResponse(html, status=400)
+            return render(request, 'time_tracking_main/time_interval_new.html', {'form': form, 'interval': interval})
+
+    # Обработка GET-запроса для отображения формы редактирования
+    def get(self, request, pk):
+        interval = get_object_or_404(TimeInterval, pk=pk)
+        form = TimeIntervalFormEdit(instance=interval)
+        if request.headers.get('HX-Request'):
+            html = render_to_string(
+                'inline_htmx/interval_edit_form.html',
+                {
+                    'interval': interval,
+                    'form': form,
+                    'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
+                },
+                request=request
+            )
+            return HttpResponse(html)
+        return render(request, 'time_tracking_main/time_interval_new.html', {'form': form, 'interval': interval})
+
+# --- Старый класс UpdateIntervalView (закомментирован) ---
+'''
+class UpdateIntervalView(LoginRequiredMixin, View):
+    # Модель, с которой работает представление
     model = TimeInterval
     # Форма для редактирования интервала
     form_class = TimeIntervalFormEdit
     # Шаблон для отображения формы редактирования
-    template_name = 'time_tracking_main/time_interval_new.html'
+    # template_name = 'time_tracking_main/time_interval_new.html'
     # URL для перенаправления после успешного обновления
     success_url = reverse_lazy('home')
     # URL для страницы логина, если пользователь не авторизован
-    login_url = 'login'
+    # login_url = 'login'
 
+    # Получение объекта интервала по первичному ключу из URL
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        return get_object_or_404(TimeInterval, pk=pk)
+
+    # Получение формы для редактирования, с передачей экземпляра интервала
+    def get_form(self, instance=None):
+        if instance is None:
+            instance = self.get_object()
+        return self.form_class(instance=instance)
+
+    # Обработка GET-запроса: отображение формы редактирования
     def get(self, request, *args, **kwargs):
-        # Получаем объект интервала по pk из URL
-        self.object = self.get_object()
-        # Получаем дату создания интервала, если она есть
-        selected_date = self.object.date_create.date() if hasattr(self.object, 'date_create') else None
-        # Если запрос пришёл через HTMX
+        obj = self.get_object()
+        # Получение выбранной даты, если она есть у объекта
+        selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
+        form = self.get_form(instance=obj)
+        # Если запрос от HTMX, возвращаем только HTML формы
         if request.headers.get('HX-Request'):
-            # Рендерим HTML-форму для HTMX
             html = render_to_string(
                 'inline_htmx/interval_edit_form.html',
-                {'interval': self.object, 'form': self.get_form(), 'selected_date': selected_date},
+                {'interval': obj, 'form': form, 'selected_date': selected_date},
                 request=request
             )
-            # Возвращаем HTML-ответ для HTMX
             return HttpResponse(html)
-        # Обычный GET-запрос — стандартное поведение UpdateView
-        return super().get(request, *args, **kwargs)
+        # Обычный рендеринг страницы с формой
+        return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
 
-    def form_valid(self, form):
+    # Проверка и сохранение формы при валидных данных
+    def form_valid(self, form, obj, selected_date, request):
         start_time = form.cleaned_data['start_time']
         end_time = form.cleaned_data['end_time']
+        # Проверка: время окончания не может быть меньше или равно времени начала
         if end_time <= start_time:
-            form.add_error('end_time', 'Время окончания не может быть меньше или равно времени начала!')
-            return self.form_invalid(form)
-        return super().form_valid(form)
+            messages.warning(request, f'Время окончания не может быть меньше или равно времени начала! {end_time}')
+            if request.headers.get('HX-Request'):
+                storage = get_messages(request)
+                html = render_to_string('includes/messages.html', {'messages': storage}, request=request)
+                form_html = render_to_string(
+                    'inline_htmx/interval_edit_form.html',
+                    {'interval': obj, 'form': form, 'selected_date': selected_date},
+                    request=request
+                )
+                return HttpResponse(html + form_html, status=400)
+            return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
+        # # Сохраняем изменения, если всё корректно
+        form.save()
+        return redirect(self.success_url)
 
-    def form_invalid(self, form):
-        # Получаем объект, если он не определён
-        if not hasattr(self, 'object') or self.object is None:
-            self.object = self.get_object()
-        selected_date = self.object.date_create.date() if hasattr(self.object, 'date_create') else None
-        if self.request.headers.get('HX-Request'):
-            html = render_to_string(
-                'inline_htmx/interval_edit_form.html',
-                {'interval': self.object, 'form': form, 'selected_date': selected_date},
-                request=self.request
-            )
-            return HttpResponse(html, status=400)
-        return super().form_invalid(form)
+    # Обработка POST-запроса: получение и валидация формы
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+        form = self.form_class(request.POST, instance=obj)
+        selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
+        # Если форма валидна, вызываем обработчик успешной валидации
+        if form.is_valid():
+            return self.form_valid(form, obj, selected_date, request)
+        else:
+            # Если запрос от HTMX, возвращаем сообщения и форму с ошибкой
+            if request.headers.get('HX-Request'):
+                storage = get_messages(request)
+                html = render_to_string('includes/messages.html', {'messages': storage}, request=request)
+                form_html = render_to_string(
+                    'inline_htmx/interval_edit_form.html',
+                    {'interval': obj, 'form': form, 'selected_date': selected_date},
+                    request=request
+                )
+                return HttpResponse(html + form_html, status=400)
+            # Обычный рендеринг страницы с ошибкой
+            return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
+'''

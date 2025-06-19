@@ -42,6 +42,7 @@ ALLOWED_HOSTS = [
     'localhost',
     'vremya.fun',
     'f046-92-42-96-168.ngrok-free.app',
+    '*'
 
 ]
 
@@ -67,8 +68,6 @@ INSTALLED_APPS = [
     'time_tracking_or.apps.TimeTrackingOrConfig',
     'oauth2_provider',
     'social_django',
-    'social_oauth_token',
-
 ]
 
 MIDDLEWARE = [
@@ -167,8 +166,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "/static/"
+
+# если дебаг на сервере
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
+# STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# если дебаг на сервере
 # STATIC_ROOT = BASE_DIR / 'static'
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
 if DEBUG:
     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
     STATIC_ROOT = None  # Не используем STATIC_ROOT в режиме отладки

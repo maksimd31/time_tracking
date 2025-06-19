@@ -4,9 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически">
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="bug fix HTMX fitch">
+      <change afterPath="$PROJECT_DIR$/templates/inline_htmx/inline_htmx.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Time_tracking/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Time_tracking/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/includes/messages.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/includes/messages.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/inline_htmx/interval_edit_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/inline_htmx/interval_edit_form.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/time_tracking_or/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,8 +124,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159" />
-        <option value="bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-PY-251.26094.141" />
+        <option value="bundled-python-sdk-9f8e2b94138c-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.26094.141" />
       </set>
     </attachedChunks>
   </component>
@@ -180,6 +185,11 @@
       <workItem from="1748599429777" duration="13416000" />
       <workItem from="1748796168244" duration="470000" />
       <workItem from="1749724651411" duration="27020000" />
+      <workItem from="1749900917922" duration="17718000" />
+      <workItem from="1750087480506" duration="1629000" />
+      <workItem from="1750089149778" duration="5652000" />
+      <workItem from="1750327231703" duration="36000" />
+      <workItem from="1750327276517" duration="332000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -397,7 +407,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749834357022</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="bug fix HTMX fitch">
+      <option name="closed" value="true" />
+      <created>1749901313405</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1749901313405</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -443,7 +461,8 @@
     <MESSAGE value="fix bug Vk" />
     <MESSAGE value="add HTMX fitch" />
     <MESSAGE value="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически" />
-    <option name="LAST_COMMIT_MESSAGE" value="add HTMX fitch HTMX-атрибуты для кнопок &quot;Старт&quot; и &quot;Стоп&quot; — теперь при нажатии эти действия выполняются асинхронно, без полной перезагрузки страницы. Результат (например, обновление таблицы или интерфейса) будет подгружаться динамически" />
+    <MESSAGE value="bug fix HTMX fitch" />
+    <option name="LAST_COMMIT_MESSAGE" value="bug fix HTMX fitch" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

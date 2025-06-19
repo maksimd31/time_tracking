@@ -1,12 +1,5 @@
 {% load custom_filters %}
 
-{% if form.non_field_errors %}
-<tr>
-    <td colspan="4" style="color: red; text-align: center;">
-        {{ form.non_field_errors|join:' ' }}
-    </td>
-</tr>
-{% endif %}
 <tr>
     <form hx-post="{% url 'update_interval' interval.id %}"
           hx-target="closest tr"
@@ -45,4 +38,3 @@
         </td>
     </form>
 </tr>
-

@@ -1,5 +1,4 @@
 import os
-
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
@@ -19,7 +18,6 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 import secrets
 from django.shortcuts import render, redirect
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -123,7 +121,7 @@ class UserLoginView(SuccessMessageMixin, LoginView):
         if not remember_me:
             self.request.session.set_expiry(0)
         else:
-            self.request.session.set_expiry(None)
+            self.request.session.set_expiry(1209600)
 
         return super().form_valid(form)
 
