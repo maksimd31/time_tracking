@@ -26,7 +26,8 @@ def duration_format(duration):
             hours, minutes, seconds = map(int, parts)
             duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
         else:
-            return "00:00:00"
+            return  "Неверный формат времени"
+
 
     if isinstance(duration, timedelta):
         total_seconds = int(duration.total_seconds())
@@ -34,7 +35,8 @@ def duration_format(duration):
         minutes, seconds = divmod(remainder, 60)
         return f"{hours} ч {str(minutes).zfill(2)} мин {str(seconds).zfill(2)} секунд"
 
-    return "00:00:00"
+    return "Неверный формат времени"
+
 
 
 

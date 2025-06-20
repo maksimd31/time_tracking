@@ -47,26 +47,6 @@
         </div>
     </form>
 
-    {#    <form method="POST" action="{% url 'add_manual_interval' %}">#}
-    {#        {% csrf_token %}#}
-    {#        <h2>Добавить новый интервал вручную</h2>#}
-    {#    </form>#}
-
-
-    {#    <div>#}
-    {#    <label for="start_time">Начало:</label>#}
-    {#    <input type="time" id="start_time" name="start_time" required>#}
-    {#    <label for="end_time">Конец:</label>#}
-    {#    <input type="time" id="end_time" name="end_time" required>#}
-    {#    <div>#}
-    {#        <div class="d-grid gap-2">#}
-    {#            <button class="btn btn-success" type="submit" name="add_manual_interval">Добавить интервал вручную#}
-    {#            </button>#}
-    {#        </div>#}
-    {#    </div>#}
-
-
-
     <h2>Интервалы времени для {{ selected_date }}</h2>
 
     <form method="get" action="{% url 'home' %}">
@@ -75,64 +55,6 @@
         </label>
         <button type="submit">Выбрать дату</button>
     </form>
-
-    {##}
-
-    {#    <tbody>#}
-    {#    {% for interval in page_obj %}#}
-    {#        <tr>#}
-    {#            <td>#}
-    {#                <a href="{% url 'interval_detail' interval.id %}">#}
-    {#                    {{ interval.start_time }}#}
-    {#                </a>#}
-    {#            </td>#}
-    {#            <td>#}
-    {#                <a href="{% url 'interval_detail' interval.id %}">#}
-    {#                    {% if interval.end_time %}#}
-    {#                        {{ interval.end_time }}#}
-    {#                    {% else %}#}
-    {#                        Идет запись интервала#}
-    {#                    {% endif %}#}
-    {#                </a>#}
-    {#            </td>#}
-    {#            <td>#}
-    {#                <a href="{% url 'interval_detail' interval.id %}">#}
-    {#                    {{ interval.duration | duration_format }}#}
-    {#                </a>#}
-    {#            </td>#}
-    {#        </tr>#}
-    {#    {% empty %}#}
-    {#        <tr>#}
-    {#            <td colspan="3">Нет интервалов для этой даты.</td>#}
-    {#        </tr>#}
-    {#    {% endfor %}#}
-    {#</tbody>#}
-
-    {#        <div>#}
-    {#            {% for interval in intervals %}#}
-    {#                <tr id="interval-{{ interval.id }}">#}
-    {#                    <td id="interval-{{ interval.id }}-start">#}
-    {#                        <button class="btn btn-secondary btn-sm"#}
-    {#                                hx-get="{% url 'edit_interval_field' interval.id 'start_time' %}"#}
-    {#                                hx-target="#interval-{{ interval.id }}-start"#}
-    {#                                hx-swap="outerHTML">#}
-    {#                            ✏️ Старт#}
-    {#                        </button>#}
-    {#                        {{ interval.start_time }}#}
-    {#                    </td>#}
-    {#                    <td id="interval-{{ interval.id }}-end">#}
-    {#                        <button class="btn btn-secondary btn-sm"#}
-    {#                                hx-get="{% url 'edit_interval_field' interval.id 'end_time' %}"#}
-    {#                                hx-target="#interval-{{ interval.id }}-end"#}
-    {#                                hx-swap="outerHTML">#}
-    {#                            ✏️ Стоп#}
-    {#                        </button>#}
-    {#                        {{ interval.end_time }}#}
-    {#                    </td>#}
-    {#                    <!-- другие столбцы -->#}
-    {#                </tr>#}
-    {#            {% endfor %}#}
-    {#        </div>#}
 
     <div class="table-responsive">
         <table class="table table-striped table-hover table-bordered text-center">
@@ -161,7 +83,14 @@
                             Идет запись интервала
                         {% endif %}
                     </td>
-                    <td>{{ interval.duration | duration_format }}</td>
+                    <td>
+                        {% if interval.end_time %}
+                            {{ interval.duration|duration_format }}
+                        {% else %}
+                            <span id="time"></span>
+                            <script src="/static/js/interval_timer.js"></script>
+                        {% endif %}
+                    </td>
                     <!--  Ячейка кнопок действия -->
                     <td>
                         {#Рдактировать                        #}
@@ -252,6 +181,5 @@
             }
         });
     </script>
+    <script src="{% static 'js/interval_timer.js' %}"></script>
 {% endblock %}
-
-
