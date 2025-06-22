@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="update README.md">
-      <change afterPath="$PROJECT_DIR$/static/js/interval_timer.js" afterDir="false" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add timer js vrema">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/time_tracking_main/time_interval_new.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/templatetags/custom_filters.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/templatetags/custom_filters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -186,7 +185,7 @@
       <workItem from="1750087480506" duration="1629000" />
       <workItem from="1750089149778" duration="5652000" />
       <workItem from="1750327231703" duration="36000" />
-      <workItem from="1750327276517" duration="8869000" />
+      <workItem from="1750327276517" duration="11367000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -428,7 +427,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750329491507</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="add timer js vrema">
+      <option name="closed" value="true" />
+      <created>1750438029116</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1750438029116</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -477,7 +484,8 @@
     <MESSAGE value="bug fix HTMX fitch" />
     <MESSAGE value="bug fix UserLoginView -&gt; fix remember_me" />
     <MESSAGE value="update README.md" />
-    <option name="LAST_COMMIT_MESSAGE" value="update README.md" />
+    <MESSAGE value="add timer js vrema" />
+    <option name="LAST_COMMIT_MESSAGE" value="add timer js vrema" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
