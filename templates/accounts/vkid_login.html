@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Вход через VK ID</h2>
+<script>
+    // Установить code_verifier в cookie
+    document.cookie = "vkid_code_verifier={{ code_verifier }}; path=/; SameSite=None; Secure";
+</script>
+<a href="{{ vkid_auth_url }}">Войти через VK ID</a>
+{% endblock %}
+

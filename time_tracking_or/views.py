@@ -72,7 +72,7 @@ class TimeIntervalView(LoginRequiredMixin, ListView):
         intervals = self.get_queryset()
         # page_obj = self.paginate_queryset(self.paginate_by)
         formatted_intervals, total_duration = self.format_intervals(intervals)
-        self.update_daily_summary(self.request.user, intervals, total_duration)
+        self.update_daily_summary(self.request.user, intervals, total_duration, selected_date)
         daily_summaries = DailySummary.objects.filter(user=self.request.user).order_by('date')
         context.update({
             'formatted_intervals': formatted_intervals,
@@ -100,15 +100,14 @@ class TimeIntervalView(LoginRequiredMixin, ListView):
         return formatted_intervals, total_duration
 
     @staticmethod
-    def update_daily_summary(user, intervals, total_duration):
-        today = now().date()
-        daily_summary, created = DailySummary.objects.get_or_create(user=user, date=today)
+    def update_daily_summary(user, intervals, total_duration, summary_date):
+        daily_summary, created = DailySummary.objects.get_or_create(user=user, date=summary_date)
         daily_summary.interval_count = intervals.count()
         daily_summary.total_time = total_duration
         daily_summary.save()
 
 
-class StartIntervalView(CreateView):
+class StartIntervalView(LoginRequiredMixin, CreateView):
     """
     Старт интервала
     """
@@ -116,6 +115,7 @@ class StartIntervalView(CreateView):
     fields = ['start_time']
     success_url = reverse_lazy('home')
     timezone = pytz.timezone('Europe/Moscow')
+    login_url = 'login'
 
     def form_valid(self, form):
         """
@@ -134,7 +134,7 @@ class StartIntervalView(CreateView):
             return super().form_valid(form)
 
 
-class StopIntervalView(CreateView):
+class StopIntervalView(LoginRequiredMixin, CreateView):
     """
     Стоп интервала
     """
@@ -142,6 +142,7 @@ class StopIntervalView(CreateView):
     fields = ['end_time']
     success_url = reverse_lazy('home')
     timezone = pytz.timezone('Europe/Moscow')
+    login_url = 'login'
 
     def form_valid(self, form):
         active_interval = TimeInterval.objects.filter(user=self.request.user, end_time__isnull=True).last()
@@ -213,6 +214,9 @@ class IntervalDeteil(LoginRequiredMixin, DetailView):
     context_object_name = 'interval'
     login_url = 'login'
 
+    def get_queryset(self):
+        return TimeInterval.objects.filter(user=self.request.user)
+
 
 # не понял не получается сделать методом POST
 class DeleteIntervalView(LoginRequiredMixin, DeleteView):
@@ -229,21 +233,30 @@ class DeleteIntervalView(LoginRequiredMixin, DeleteView):
         self.object.delete()
         return HttpResponseRedirect(self.success_url)
 
+    def get_queryset(self):
+        return TimeInterval.objects.filter(user=self.request.user)
 
-class IntervalDetailNew(DetailView):
+
+class IntervalDetailNew(LoginRequiredMixin, DetailView):
     """ Класс для отображения деталей интервала с использованием HTMX.
     """
     model = TimeInterval
     template_name = 'inline_htmx/interval_row.html'
+    login_url = 'login'
+
+    def get_queryset(self):
+        return TimeInterval.objects.filter(user=self.request.user)
 
 
-class IntervalRowHtmxView(View):
+class IntervalRowHtmxView(LoginRequiredMixin, View):
     """
     Класс для обработки HTMX-запросов и возврата строки интервала.
     """
 
+    login_url = 'login'
+
     def get(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk)
+        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
         selected_date = interval.date_create.date() if hasattr(interval, 'date_create') else None
         return render(request, 'inline_htmx/interval_row.html', {'interval': interval, 'selected_date': selected_date})
 
@@ -251,15 +264,17 @@ class IntervalRowHtmxView(View):
 # Декоратор, отключающий проверку CSRF для данного класса (используется для HTMX-запросов)
 @method_decorator(csrf_exempt, name='dispatch')
 # Класс-представление для удаления интервала через HTMX-запрос
-class DeleteIntervalViewHTMX(View):
+class DeleteIntervalViewHTMX(LoginRequiredMixin, View):
     """
     Класс для обработки HTMX-запросов на удаление интервала.
     """
 
     # Метод обработки HTTP DELETE-запроса
+    login_url = 'login'
+
     def delete(self, request, pk):
         # Получаем объект TimeInterval по первичному ключу или возвращаем 404
-        interval = get_object_or_404(TimeInterval, pk=pk)
+        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
         # Удаляем найденный интервал
         interval.delete()
         # Возвращаем пустой HTTP-ответ (без содержимого)
@@ -345,7 +360,7 @@ class DeleteIntervalViewHTMX(View):
 class UpdateIntervalView(LoginRequiredMixin, View):
     # Обработка POST-запроса для обновления интервала
     def post(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk)
+        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
         form = TimeIntervalFormEdit(request.POST, instance=interval)
         if form.is_valid():
             start_time = form.cleaned_data.get('start_time')
@@ -393,7 +408,7 @@ class UpdateIntervalView(LoginRequiredMixin, View):
 
     # Обработка GET-запроса для отображения формы редактирования
     def get(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk)
+        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
         form = TimeIntervalFormEdit(instance=interval)
         if request.headers.get('HX-Request'):
             html = render_to_string(

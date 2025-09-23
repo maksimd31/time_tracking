@@ -32,7 +32,9 @@ class ChangePasswordView(LoginRequiredMixin, SuccessMessageMixin, PasswordChange
     form_class = CustomPasswordChangeForm
     template_name = 'accounts/change_password.html'
     success_message = "!"
-    success_url = reverse_lazy('profile_detail')
+
+    def get_success_url(self):
+        return reverse_lazy('profile_detail', kwargs={'slug': self.request.user.profile.slug})
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
@@ -116,14 +118,13 @@ class UserLoginView(SuccessMessageMixin, LoginView):
         """
         Если форма валидна, обработать 'remember_me' и выполнить вход.
         """
+        response = super().form_valid(form)
         remember_me = form.cleaned_data.get('remember_me')
-        login(self.request, form.get_user())
         if not remember_me:
-            self.request.session.set_expiry(0)
+            self.request.session.set_expiry(60 * 60 * 24)
         else:
             self.request.session.set_expiry(1209600)
-
-        return super().form_valid(form)
+        return response
 
     def get_context_data(self, **kwargs):
         """

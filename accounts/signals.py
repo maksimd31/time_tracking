@@ -5,7 +5,6 @@ from django.dispatch import receiver
 from Time_tracking import settings
 from services.utils import unique_slugify
 from .models import Profile
-from django.utils.text import slugify
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -16,8 +15,8 @@ def create_user_profile(sender, instance, created, **kwargs):
         profile = Profile.objects.create(user=instance)
 
         # # Генерация уникального slug
-        profile.slug = unique_slugify(profile, instance.username, 'slug')
-        profile.save()
+        profile.slug = unique_slugify(profile, instance.username, profile.slug)
+        profile.save(update_fields=['slug'])
 
         # Отправка приветственного сообщения
         subject = instance.first_name

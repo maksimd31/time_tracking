@@ -84,12 +84,18 @@
                         {% endif %}
                     </td>
                     <td>
+                        {# Внутри цикла — только HTML, никаких <script>! #}
                         {% if interval.end_time %}
                             {{ interval.duration|duration_format }}
                         {% else %}
                             <span id="time"></span>
-                            <script src="/static/js/interval_timer.js"></script>
                         {% endif %}
+                        {#                        {% if interval.end_time %}#}
+                        {#                            {{ interval.duration|duration_format }}#}
+                        {#                        {% else %}#}
+                        {#                            <span id="time"></span>#}
+                        {#                            <script src="/static/js/interval_timer.js"></script>#}
+                        {#                        {% endif %}#}
                     </td>
                     <!--  Ячейка кнопок действия -->
                     <td>
@@ -121,6 +127,7 @@
                     <td colspan="3">Нет интервалов для этой даты.</td>
                 </tr>
             {% endfor %}
+
             </tbody>
         </table>
         {% include 'includes/pagination.html' %}
@@ -150,6 +157,7 @@
         </table>
 
     </div>
+
     {#    </body>#}
     {##}
     {#    </div>#}

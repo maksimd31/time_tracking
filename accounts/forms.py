@@ -98,6 +98,7 @@ class ProfileUpdateForm(forms.ModelForm):
     Форма обновления данных профиля пользователя
     """
     avatar = forms.ImageField(
+        required=False,
         label="",  # Убираем стандартную метку поля
         widget=forms.FileInput(attrs={
             'class': 'form-control',  # Добавляем класс для стилизации
