@@ -74,10 +74,10 @@ class UserUpdateForm(forms.ModelForm):
     Форма обновления данных пользователя
     """
     username = forms.CharField(max_length=100,
-                               label="",
+                               label="Логин",
                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Логин'}),
                                validators=[validate_latin_characters])
-    email = forms.EmailField(label="", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email '}))
+    email = forms.EmailField(label="Email", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email '}))
 
     class Meta:
         model = User
@@ -99,16 +99,24 @@ class ProfileUpdateForm(forms.ModelForm):
     """
     avatar = forms.ImageField(
         required=False,
-        label="",  # Убираем стандартную метку поля
+        label="Фотография",
         widget=forms.FileInput(attrs={
-            'class': 'form-control',  # Добавляем класс для стилизации
-            'placeholder': 'Загрузите ваш аватар',  # Добавляем текст подсказки
+            'class': 'form-control',
+        })
+    )
+    bio = forms.CharField(
+        required=False,
+        label="О себе",
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 4,
+            'placeholder': 'Кратко расскажите о себе'
         })
     )
 
     class Meta:
         model = Profile
-        fields = ('avatar',)  # Указываем, какие поля включить в форму
+        fields = ('avatar', 'bio')
 
 
 class UserRegisterForm(PlaceholderAndStyleMixin,FormStyleMixin, UserCreationForm):

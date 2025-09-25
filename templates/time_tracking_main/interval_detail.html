@@ -1,29 +1,30 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load custom_filters %}
 
 {% block content %}
-    <div class="text-center">
-        Редактирование интервала времени
-
-        <form method="post" action="{% url 'update_interval' interval.id %}">
-
-            {% csrf_token %}
-
-            <div>
-                <label for="start_time">Начало:</label>
-                <input type="time" id="start_time" name="start_time" value="{{ interval.start_time|time:'H:i' }}"
-                       required>
-                <label for="end_time">Конец:</label>
-                <input type="time" id="end_time" name="end_time" value="{{ interval.end_time|time:'H:i' }}" required>
-                <div class="d-flex justify-content-between">
-                    <button class="btn btn-success" type="submit" name="update_interval">Обновить интервал</button>
-                    <a href="{% url 'delete_interval' interval.id %}" class="btn btn-danger">Удалить интервал</a>
-                </div>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">Интервал</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Счетчик</dt>
+                    <dd class="col-sm-8">{{ interval.counter.name }}</dd>
+                    <dt class="col-sm-4">Дата</dt>
+                    <dd class="col-sm-8">{{ interval.day|date:'d.m.Y' }}</dd>
+                    <dt class="col-sm-4">Начало</dt>
+                    <dd class="col-sm-8">{{ interval.start_time }}</dd>
+                    <dt class="col-sm-4">Конец</dt>
+                    <dd class="col-sm-8">{% if interval.end_time %}{{ interval.end_time }}{% else %}—{% endif %}</dd>
+                    <dt class="col-sm-4">Длительность</dt>
+                    <dd class="col-sm-8">{% if interval.duration %}{{ interval.duration|duration_format }}{% else %}—{% endif %}</dd>
+                </dl>
             </div>
-        </form>
+            <div class="card-footer d-flex justify-content-between">
+                <a class="btn btn-outline-secondary" href="{% url 'counter_history' interval.counter_id %}">Назад</a>
+                <a class="btn btn-primary" href="{% url 'interval_update' interval.id %}">Редактировать</a>
+            </div>
+        </div>
     </div>
-    <br>
-    <br>
-    {% include 'includes/inegrations.html' %}
+</div>
 {% endblock %}
-

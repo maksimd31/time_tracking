@@ -1,0 +1,26 @@
+{% load custom_filters %}
+<form hx-post="{% url 'interval_update' interval.id %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML"
+      style="display: contents;">
+    <tr class="table-warning">
+        <td>
+            {{ interval.day|date:'d.m.Y' }}
+            {{ form.day }}
+        </td>
+        <td>{{ form.start_time }}</td>
+        <td>{{ form.end_time }}</td>
+        <td>{% if interval.duration %}{{ interval.duration|duration_format }}{% else %}—{% endif %}</td>
+        <td class="text-end">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="{% url 'interval_update' interval.id %}?mode=display"
+                    hx-target="closest tr"
+                    hx-swap="outerHTML">
+                Отмена
+            </button>
+        </td>
+    </tr>
+</form>

@@ -1,23 +1,37 @@
-from django.forms import ModelForm, TextInput
+from django.forms import ModelForm, TextInput, TimeInput
 from django import forms
-from .models import TimeInterval
+from .models import TimeInterval, TimeCounter
+
+
+class TimeCounterForm(forms.ModelForm):
+    class Meta:
+        model = TimeCounter
+        fields = ['name', 'color']
+        widgets = {
+            'name': TextInput(attrs={'class': 'form-control', 'placeholder': 'Название счетчика'}),
+            'color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
+        }
 
 class TimeIntervalFormEdit(ModelForm):
     class Meta:
         model = TimeInterval
-        fields = ['start_time', 'end_time']
+        fields = ['day', 'start_time', 'end_time']
         widgets = {
-            'start_time': TextInput(attrs={'type': 'time'}),
-            'end_time': TextInput(attrs={'type': 'time'}),
+            'day': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'start_time': TimeInput(format='%H:%M', attrs={'type': 'time', 'class': 'form-control', 'step': '1'}),
+            'end_time': TimeInput(format='%H:%M', attrs={'type': 'time', 'class': 'form-control', 'step': '1'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['day'].label = 'Дата'
         self.fields['start_time'].label = 'Старт'
         self.fields['end_time'].label = 'Стоп'
         # Если поле break_duration не используется в форме, не добавлять label
         if 'break_duration' in self.fields:
             self.fields['break_duration'].label = 'Перерыв'
+        if self.instance and self.instance.pk:
+            self.fields['day'].widget = forms.HiddenInput()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -37,4 +51,3 @@ class TimeIntervalFormEdit(ModelForm):
                 from django.core.exceptions import ValidationError
                 raise ValidationError('Время окончания не может быть раньше времени начала!')
         return cleaned_data
-

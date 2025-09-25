@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">{{ counter.name }}</h1>
+        <p class="text-muted-soft mb-0">История всех интервалов и ручных записей</p>
+    </div>
+    <div class="mt-3 mt-lg-0 d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'home' %}">Назад</a>
+        <a class="btn btn-outline-secondary" href="{% url 'counter_update' counter.id %}">Редактировать</a>
+        <form method="post" action="{% url 'counter_delete' counter.id %}" onsubmit="return confirm('Удалить счетчик? Все интервалы будут удалены.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger">Удалить</button>
+        </form>
+        <a class="btn btn-primary" href="{% url 'counter_manual_interval' counter.id %}">Добавить интервал</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label text-muted-soft" for="start">С даты</label>
+                <input type="date" id="start" name="start" value="{% if filter_start %}{{ filter_start|date:'Y-m-d' }}{% endif %}" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted-soft" for="end">По дату</label>
+                <input type="date" id="end" name="end" value="{% if filter_end %}{{ filter_end|date:'Y-m-d' }}{% endif %}" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-secondary w-100">Применить фильтр</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+            <span class="text-muted-soft">Всего интервалов</span>
+            <p class="fs-4 fw-semibold mb-0">{{ interval_count }}</p>
+        </div>
+        <div>
+            <span class="text-muted-soft">Суммарное время</span>
+            <p class="fs-4 fw-semibold mb-0">{{ total_duration|duration_format }}</p>
+        </div>
+    </div>
+</div>
+
+{% if intervals %}
+<div class="table-responsive">
+    <table class="table table-modern align-middle history-table">
+        <thead>
+        <tr>
+            <th scope="col">Дата</th>
+            <th scope="col">Старт</th>
+            <th scope="col">Стоп</th>
+            <th scope="col">Длительность</th>
+            <th scope="col" class="text-end">Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for interval in intervals %}
+            {% include 'time_tracking_main/partials/history_interval_row.html' with interval=interval %}
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include 'includes/pagination.html' %}
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <h5 class="fw-semibold">Интервалы не найдены</h5>
+        <p class="text-muted-soft">Попробуйте изменить фильтры или добавьте первый интервал вручную.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

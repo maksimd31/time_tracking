@@ -1,510 +1,518 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, DeleteView, UpdateView, DetailView
-from django.shortcuts import redirect
+from datetime import timedelta
+
 from django.contrib import messages
-from django.utils.timezone import now, make_aware
-from datetime import datetime, timedelta
-import pytz
-from django.http import HttpResponseRedirect
-from .models import TimeInterval, DailySummary
-from .forms import TimeIntervalFormEdit
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Sum
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.template.loader import render_to_string
-from django.http import HttpResponse
-from django.views import View
-from django.shortcuts import get_object_or_404, render
-from django.contrib.messages import get_messages
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
+
+from .forms import TimeCounterForm, TimeIntervalFormEdit
+from .models import DailySummary, TimeCounter, TimeInterval
 
 
-class IndexView(LoginRequiredMixin, ListView):
-    template_name = 'time_tracking_main/index.html'
-    login_url = 'login'
+def recalculate_daily_summary(user, day):
+    """Пересчитать суточный итог пользователя по всем счетчикам."""
+    aggregate = TimeInterval.objects.filter(
+        user=user,
+        day=day,
+        end_time__isnull=False,
+    ).aggregate(total=Sum('duration'), interval_count=Count('id'))
 
-    # context_object_name = 'time_intervals'
-    #
-    def get_queryset(self):
-        return TimeInterval.objects.all()
+    total = aggregate['total'] or timedelta()
+    interval_count = aggregate['interval_count'] or 0
+
+    if interval_count == 0 and total == timedelta():
+        DailySummary.objects.filter(user=user, date=day).delete()
+        return
+
+    DailySummary.objects.update_or_create(
+        user=user,
+        date=day,
+        defaults={
+            'total_time': total,
+            'interval_count': interval_count,
+        },
+    )
 
 
-class DailySummaryView(LoginRequiredMixin, ListView):
-    """
-    Основное представление для работы с ежедневными сводками.
-    """
-    template_name = 'time_tracking_main/daily_summary.html'
-    # template_name = 'time_tracking_main/time_interval_new.html'
+class TimeCounterListView(ListView):
+    template_name = 'time_tracking_main/counter_dashboard.html'
+    context_object_name = 'counters'
+    paginate_by = 6
 
-    login_url = 'login'
-    context_object_name = 'daily_summaries'
-    paginate_by = 5
-
-    def get_queryset(self):
-        return DailySummary.objects.filter(user=self.request.user).order_by('-date')
-
-
-class TimeIntervalView(LoginRequiredMixin, ListView):
-    """
-    Основное представление для работы с интервалами времени.
-    """
-    template_name = 'time_tracking_main/time_interval_new.html'
-    timezone = pytz.timezone('Europe/Moscow')
-    login_url = 'login'
-    context_object_name = 'intervals'
-    paginate_by = 5
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            context = {
+                'login_url': reverse('login'),
+                'register_url': reverse('register'),
+            }
+            return render(request, 'time_tracking_main/welcome.html', context)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_selected_date(self):
-        selected_date_str = self.request.GET.get('date', )
-        if not selected_date_str:
-            return now().astimezone(self.timezone).date()
+        date_str = self.request.GET.get('date')
+        if not date_str:
+            return timezone.localdate()
         try:
-            return datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+            return timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            return now().astimezone(self.timezone).date()
+            return timezone.localdate()
 
     def get_queryset(self):
-        selected_date = self.get_selected_date()
-        return TimeInterval.objects.filter(user=self.request.user, date_create__date=selected_date)
+        return TimeCounter.objects.filter(user=self.request.user).order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         selected_date = self.get_selected_date()
-        intervals = self.get_queryset()
-        # page_obj = self.paginate_queryset(self.paginate_by)
-        formatted_intervals, total_duration = self.format_intervals(intervals)
-        self.update_daily_summary(self.request.user, intervals, total_duration, selected_date)
-        daily_summaries = DailySummary.objects.filter(user=self.request.user).order_by('date')
-        context.update({
-            'formatted_intervals': formatted_intervals,
-            'daily_summaries': daily_summaries,
-            'selected_date': selected_date,
-            # 'intervals': intervals,
-            # 'page_obj': page_obj,
-        })
+        user_counters = TimeCounter.objects.filter(user=self.request.user).order_by('name')
+        intervals_qs = TimeInterval.objects.filter(
+            counter__user=self.request.user,
+            day=selected_date,
+        )
+
+        totals = {
+            item['counter_id']: {
+                'total': item['total'] or timedelta(),
+                'interval_count': item['interval_count'],
+            }
+            for item in intervals_qs.filter(end_time__isnull=False)
+            .values('counter_id')
+            .annotate(total=Sum('duration'), interval_count=Count('id'))
+        }
+
+        active_map = {
+            interval.counter_id: interval
+            for interval in intervals_qs.filter(end_time__isnull=True).select_related('counter')
+        }
+
+        counter_stats = {}
+        overall_total = timedelta()
+        chart_labels = []
+        chart_values = []
+        chart_colors = []
+        active_counter_id = None
+        active_interval = None
+
+        for counter in user_counters:
+            total_info = totals.get(counter.id, {'total': timedelta(), 'interval_count': 0})
+            total_duration = total_info['total']
+            overall_total += total_duration
+            counter_stats[counter.id] = {
+                'total_duration': total_duration,
+                'interval_count': total_info['interval_count'],
+                'active_interval': active_map.get(counter.id),
+            }
+            if active_map.get(counter.id) and active_counter_id is None:
+                active_counter_id = counter.id
+                active_interval = active_map.get(counter.id)
+            if total_duration > timedelta():
+                chart_labels.append(counter.name)
+                chart_values.append(round(total_duration.total_seconds() / 3600, 2))
+                chart_colors.append(counter.color)
+
+        context.update(
+            {
+                'selected_date': selected_date,
+                'counter_stats': counter_stats,
+                'overall_total': overall_total,
+                'chart_labels': chart_labels,
+                'chart_values': chart_values,
+                'chart_colors': chart_colors,
+                'create_form': TimeCounterForm(),
+                'active_counter_id': active_counter_id,
+                'chart_max_value': max(chart_values) if chart_values else 0,
+                'chart_total': sum(chart_values) if chart_values else 0,
+                'counter_total': user_counters.count(),
+                'active_counter': active_interval.counter if active_interval else None,
+                'active_interval': active_interval,
+                'paused_counters': self.request.session.get('paused_counters', []),
+            }
+        )
         return context
 
-    @staticmethod
-    def format_intervals(intervals):
-        formatted_intervals = []
-        total_duration = timedelta()
-
-        for interval in intervals:
-            duration = interval.duration if interval.duration is not None else timedelta(0)
-            formatted_intervals.append({
-                'start_time': interval.start_time,
-                'end_time': interval.end_time,
-                'duration': duration,
-            })
-            total_duration += duration
-
-        return formatted_intervals, total_duration
-
-    @staticmethod
-    def update_daily_summary(user, intervals, total_duration, summary_date):
-        daily_summary, created = DailySummary.objects.get_or_create(user=user, date=summary_date)
-        daily_summary.interval_count = intervals.count()
-        daily_summary.total_time = total_duration
-        daily_summary.save()
+    def get_template_names(self):
+        if self.request.headers.get('HX-Request'):
+            return ['time_tracking_main/_counter_dashboard_content.html']
+        return [self.template_name]
 
 
-class StartIntervalView(LoginRequiredMixin, CreateView):
-    """
-    Старт интервала
-    """
-    model = TimeInterval
-    fields = ['start_time']
+class TimeCounterCreateView(LoginRequiredMixin, CreateView):
+    model = TimeCounter
+    form_class = TimeCounterForm
+    template_name = 'time_tracking_main/counter_form.html'
     success_url = reverse_lazy('home')
-    timezone = pytz.timezone('Europe/Moscow')
-    login_url = 'login'
-
-    def form_valid(self, form):
-        """
-        Логика при успешной отправке формы.
-        """
-        active_interval = TimeInterval.objects.filter(user=self.request.user, end_time__isnull=True).first()
-        if active_interval:
-            # Если есть активный интервал, показываем предупреждение
-            messages.warning(self.request, "У вас уже есть активный интервал. Завершите его перед началом нового.")
-            return redirect(self.success_url)
-        else:
-            # Если активного интервала нет, создаем новый
-            form.instance.user = self.request.user
-            form.instance.start_time = now().astimezone(self.timezone).time()
-            messages.success(self.request, "Вы нажали кнопку СТАРТ. 'идет запись'")
-            return super().form_valid(form)
-
-
-class StopIntervalView(LoginRequiredMixin, CreateView):
-    """
-    Стоп интервала
-    """
-    model = TimeInterval
-    fields = ['end_time']
-    success_url = reverse_lazy('home')
-    timezone = pytz.timezone('Europe/Moscow')
-    login_url = 'login'
-
-    def form_valid(self, form):
-        active_interval = TimeInterval.objects.filter(user=self.request.user, end_time__isnull=True).last()
-        if active_interval:
-            current_time = now().astimezone(self.timezone)
-            if active_interval.start_time and (
-                    current_time - make_aware(datetime.combine(current_time.date(), active_interval.start_time))
-            ) > timedelta(hours=24):
-                active_interval.end_time = current_time.time()
-                messages.warning(
-                    self.request, "Интервал автоматически завершен, так как он был активен более 24 часов."
-                )
-            else:
-                active_interval.end_time = current_time.time()
-                messages.success(self.request, "Интервал успешно завершен.")
-            active_interval.save()
-        else:
-            messages.warning(self.request, "Нет активного интервала для завершения.")
-        return redirect('home')
-
-
-class AddManualIntervalView(LoginRequiredMixin, CreateView):
-    """
-    Класс для добавления интервалов вручную.
-    """
-    model = TimeInterval
-    fields = ['start_time', 'end_time']
-    template_name = 'time_tracking_main/time_interval_new.html'
-    success_url = reverse_lazy('home')
-    login_url = 'login'
-
-    # def form_valid(self, form):
-    #     form.instance.user = self.request.user
-    #     messages.success(self.request, "Интервал успешно добавлен вручную.")
-    #     return super().form_valid(form)
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        form.instance.start_time = form.cleaned_data['start_time']
-        form.instance.end_time = form.cleaned_data['end_time']
-        messages.success(self.request, "Интервал успешно добавлен вручную.")
+        messages.success(self.request, 'Счетчик создан.')
         return super().form_valid(form)
 
 
-#
-#
-# class UpdateIntervalView(LoginRequiredMixin, UpdateView):
-#     """
-#     Класс для обновления интервалов.
-#     """
-#     model = TimeInterval
-#     fields = ['start_time', 'end_time']
-#     template_name = 'time_tracking_main/time_interval_new.html'
-#     success_url = reverse_lazy('home')
-#     login_url = 'login'
-#
-#     def form_valid(self, form):
-#         messages.success(self.request, "Интервал успешно обновлен.")
-#         return super().form_valid(form)
+class TimeCounterUpdateView(LoginRequiredMixin, UpdateView):
+    model = TimeCounter
+    form_class = TimeCounterForm
+    template_name = 'time_tracking_main/counter_form.html'
+    success_url = reverse_lazy('home')
+
+    def get_queryset(self):
+        return TimeCounter.objects.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Счетчик обновлен.')
+        return super().form_valid(form)
 
 
-#
-class IntervalDeteil(LoginRequiredMixin, DetailView):
-    """
-    Класс для отображения деталей интервала.
-    """
+class TimeCounterDeleteView(LoginRequiredMixin, DeleteView):
+    model = TimeCounter
+    template_name = 'time_tracking_main/counter_confirm_delete.html'
+    success_url = reverse_lazy('home')
+
+    def get_queryset(self):
+        return TimeCounter.objects.filter(user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Счетчик удален.')
+        return super().delete(request, *args, **kwargs)
+
+
+class CounterHistoryView(LoginRequiredMixin, ListView):
+    template_name = 'time_tracking_main/counter_history.html'
+    context_object_name = 'intervals'
+    paginate_by = 10
+
+    def dispatch(self, request, *args, **kwargs):
+        self.counter = get_object_or_404(TimeCounter, pk=self.kwargs['pk'], user=request.user)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_date_filters(self):
+        start_str = self.request.GET.get('start')
+        end_str = self.request.GET.get('end')
+        start = end = None
+        if start_str:
+            try:
+                start = timezone.datetime.strptime(start_str, '%Y-%m-%d').date()
+            except ValueError:
+                start = None
+        if end_str:
+            try:
+                end = timezone.datetime.strptime(end_str, '%Y-%m-%d').date()
+            except ValueError:
+                end = None
+        return start, end
+
+    def get_queryset(self):
+        qs = TimeInterval.objects.filter(counter=self.counter).order_by('-day', '-date_create')
+        start, end = self.get_date_filters()
+        if start:
+            qs = qs.filter(day__gte=start)
+        if end:
+            qs = qs.filter(day__lte=end)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        start, end = self.get_date_filters()
+        intervals = self.get_queryset().filter(end_time__isnull=False)
+        aggregate = intervals.aggregate(total=Sum('duration'), count=Count('id'))
+        context.update(
+            {
+                'counter': self.counter,
+                'filter_start': start,
+                'filter_end': end,
+                'total_duration': aggregate['total'] or timedelta(),
+                'interval_count': aggregate['count'] or 0,
+            }
+        )
+        return context
+
+
+class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
+    model = TimeInterval
+    form_class = TimeIntervalFormEdit
+    template_name = 'time_tracking_main/interval_form.html'
+
+    def get_success_url(self):
+        return reverse('counter_history', kwargs={'pk': self.object.counter_id})
+
+    def get_queryset(self):
+        return TimeInterval.objects.filter(counter__user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['interval'] = self.object
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.headers.get('HX-Request'):
+            mode = self.request.GET.get('mode')
+            template = 'time_tracking_main/partials/history_interval_edit_row.html'
+            if mode == 'display':
+                template = 'time_tracking_main/partials/history_interval_row.html'
+            context['interval'] = self.object
+            return render(
+                self.request,
+                template,
+                context,
+                **response_kwargs
+            )
+        return super().render_to_response(context, **response_kwargs)
+
+    def form_valid(self, form):
+        original_day = self.get_object().day
+        response = super().form_valid(form)
+        recalculate_daily_summary(self.request.user, self.object.day)
+        if original_day != self.object.day:
+            recalculate_daily_summary(self.request.user, original_day)
+        if self.request.headers.get('HX-Request'):
+            html = render_to_string(
+                'time_tracking_main/partials/history_interval_row.html',
+                {'interval': self.object},
+                request=self.request
+            )
+            return HttpResponse(html)
+        return response
+
+    def form_invalid(self, form):
+        if self.request.headers.get('HX-Request'):
+            context = self.get_context_data(form=form)
+            return render(
+                self.request,
+                'time_tracking_main/partials/history_interval_edit_row.html',
+                context,
+                status=400
+            )
+        return super().form_invalid(form)
+
+
+class CounterIntervalDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        interval = get_object_or_404(TimeInterval, pk=pk, counter__user=request.user)
+        counter_id = interval.counter_id
+        day = interval.day
+        interval.delete()
+        recalculate_daily_summary(request.user, day)
+        messages.success(request, 'Интервал удален.')
+        return redirect('counter_history', pk=counter_id)
+
+
+class CounterManualIntervalCreateView(LoginRequiredMixin, CreateView):
+    model = TimeInterval
+    form_class = TimeIntervalFormEdit
+    template_name = 'time_tracking_main/interval_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.counter = get_object_or_404(TimeCounter, pk=self.kwargs['pk'], user=request.user)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['day'] = timezone.localdate()
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['counter'] = self.counter
+        return context
+
+    def form_valid(self, form):
+        form.instance.counter = self.counter
+        form.instance.user = self.request.user
+        messages.success(self.request, 'Интервал добавлен вручную.')
+        response = super().form_valid(form)
+        recalculate_daily_summary(self.request.user, form.instance.day)
+        return response
+
+    def get_success_url(self):
+        return reverse('counter_history', kwargs={'pk': self.counter.pk})
+
+
+class CounterBaseActionView(LoginRequiredMixin, View):
+    action_message = ''
+
+    def post(self, request, pk):
+        counter = get_object_or_404(TimeCounter, pk=pk, user=request.user)
+        return self.handle(request, counter)
+
+    def handle(self, request, counter):  # pragma: no cover - override required
+        raise NotImplementedError
+
+    def get_redirect(self, request):
+        next_url = request.POST.get('next') or request.GET.get('next')
+        return redirect(next_url or 'home')
+
+    def hx_response(self, request):
+        view = TimeCounterListView()
+        view.request = request
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        return render(request, 'time_tracking_main/_counter_dashboard_content.html', context)
+
+
+class CounterStartView(CounterBaseActionView):
+    def handle(self, request, counter):
+        active_interval = TimeInterval.objects.filter(counter__user=request.user, end_time__isnull=True).exclude(counter=counter).first()
+        if active_interval:
+            messages.warning(request, 'Невозможно делать два дела одновременно. Завершите текущий счетчик.')
+            if request.headers.get('HX-Request'):
+                return self.hx_response(request)
+            return self.get_redirect(request)
+        if counter.is_running:
+            messages.info(request, 'Счетчик уже запущен.')
+            if request.headers.get('HX-Request'):
+                return self.hx_response(request)
+            return self.get_redirect(request)
+        local_time = timezone.localtime()
+        TimeInterval.objects.create(
+            counter=counter,
+            user=request.user,
+            day=timezone.localdate(),
+            start_time=local_time.time(),
+        )
+        paused = request.session.get('paused_counters', [])
+        if counter.id in paused:
+            paused.remove(counter.id)
+            request.session['paused_counters'] = paused
+        if request.headers.get('HX-Request'):
+            return self.hx_response(request)
+        return self.get_redirect(request)
+
+
+class CounterPauseView(CounterBaseActionView):
+    action_message = 'Счетчик поставлен на паузу.'
+
+    def handle(self, request, counter):
+        interval = counter.intervals.filter(end_time__isnull=True).order_by('-date_create').first()
+        if not interval:
+            messages.info(request, 'Нет активного интервала для паузы.')
+            if request.headers.get('HX-Request'):
+                return self.hx_response(request)
+            return self.get_redirect(request)
+        local_time = timezone.localtime()
+        interval.end_time = local_time.time()
+        interval.day = timezone.localdate()
+        interval.save(update_fields=['end_time', 'day', 'duration'])
+        recalculate_daily_summary(request.user, interval.day)
+        paused = request.session.get('paused_counters', [])
+        if counter.id not in paused:
+            paused.append(counter.id)
+            request.session['paused_counters'] = paused
+        if request.headers.get('HX-Request'):
+            return self.hx_response(request)
+        return self.get_redirect(request)
+
+
+class CounterStopView(CounterBaseActionView):
+    def handle(self, request, counter):
+        interval = counter.intervals.filter(end_time__isnull=True).order_by('-date_create').first()
+        if not interval:
+            messages.info(request, 'Нет активного интервала для остановки.')
+            if request.headers.get('HX-Request'):
+                return self.hx_response(request)
+            return self.get_redirect(request)
+        local_time = timezone.localtime()
+        interval.end_time = local_time.time()
+        interval.day = timezone.localdate()
+        interval.save(update_fields=['end_time', 'day', 'duration'])
+        recalculate_daily_summary(request.user, interval.day)
+        paused = request.session.get('paused_counters', [])
+        if counter.id in paused:
+            paused.remove(counter.id)
+            request.session['paused_counters'] = paused
+        if request.headers.get('HX-Request'):
+            return self.hx_response(request)
+        return self.get_redirect(request)
+
+
+class CounterSummaryView(LoginRequiredMixin, TemplateView):
+    template_name = 'time_tracking_main/counter_summary.html'
+
+    PERIODS = {
+        'week': 'Неделя',
+        'month': 'Месяц',
+        'custom': 'Произвольный период',
+    }
+
+    def get_period_range(self):
+        period = self.request.GET.get('period', 'week')
+        today = timezone.localdate()
+        if period == 'month':
+            start = today.replace(day=1)
+        elif period == 'custom':
+            start_str = self.request.GET.get('start')
+            end_str = self.request.GET.get('end')
+            try:
+                start = timezone.datetime.strptime(start_str, '%Y-%m-%d').date() if start_str else today
+            except ValueError:
+                start = today
+            try:
+                end = timezone.datetime.strptime(end_str, '%Y-%m-%d').date() if end_str else today
+            except ValueError:
+                end = today
+            if start > end:
+                start, end = end, start
+            return period, start, end
+        else:
+            start = today - timedelta(days=6)
+        return period, start, today
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        period, start, end = self.get_period_range()
+        intervals = TimeInterval.objects.filter(
+            user=self.request.user,
+            day__range=(start, end),
+            end_time__isnull=False,
+        )
+        per_counter = intervals.values('counter__name', 'counter__color').annotate(
+            total=Sum('duration'),
+            interval_count=Count('id'),
+        ).order_by('-total')
+        per_day = intervals.values('day').annotate(total=Sum('duration')).order_by('day')
+
+        summary_total = sum((item['total'] or timedelta() for item in per_counter), timedelta())
+
+        context.update(
+            {
+                'period_key': period,
+                'periods': self.PERIODS,
+                'start': start,
+                'end': end,
+                'per_counter': per_counter,
+                'per_day': per_day,
+                'summary_total': summary_total,
+            }
+        )
+        return context
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteIntervalViewHTMX(CounterIntervalDeleteView):
+    """Совместимость с существующим HTMX маршрутом."""
+
+    def post(self, request, pk):
+        interval = get_object_or_404(TimeInterval, pk=pk, counter__user=request.user)
+        counter_id = interval.counter_id
+        day = interval.day
+        interval.delete()
+        recalculate_daily_summary(request.user, day)
+        if request.headers.get('HX-Request'):
+            return HttpResponse(status=204)
+        messages.success(request, 'Интервал удален.')
+        return redirect('counter_history', pk=counter_id)
+
+
+class IntervalDetailView(LoginRequiredMixin, DetailView):
     model = TimeInterval
     template_name = 'time_tracking_main/interval_detail.html'
     context_object_name = 'interval'
-    login_url = 'login'
 
     def get_queryset(self):
-        return TimeInterval.objects.filter(user=self.request.user)
-
-
-# не понял не получается сделать методом POST
-class DeleteIntervalView(LoginRequiredMixin, DeleteView):
-    """
-    Класс для удаления интервалов
-    """
-    model = TimeInterval
-    template_name = 'time_tracking_main/time_interval_new.html'
-    success_url = reverse_lazy('home')
-    login_url = 'login'
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.object.delete()
-        return HttpResponseRedirect(self.success_url)
-
-    def get_queryset(self):
-        return TimeInterval.objects.filter(user=self.request.user)
-
-
-class IntervalDetailNew(LoginRequiredMixin, DetailView):
-    """ Класс для отображения деталей интервала с использованием HTMX.
-    """
-    model = TimeInterval
-    template_name = 'inline_htmx/interval_row.html'
-    login_url = 'login'
-
-    def get_queryset(self):
-        return TimeInterval.objects.filter(user=self.request.user)
-
-
-class IntervalRowHtmxView(LoginRequiredMixin, View):
-    """
-    Класс для обработки HTMX-запросов и возврата строки интервала.
-    """
-
-    login_url = 'login'
-
-    def get(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
-        selected_date = interval.date_create.date() if hasattr(interval, 'date_create') else None
-        return render(request, 'inline_htmx/interval_row.html', {'interval': interval, 'selected_date': selected_date})
-
-
-# Декоратор, отключающий проверку CSRF для данного класса (используется для HTMX-запросов)
-@method_decorator(csrf_exempt, name='dispatch')
-# Класс-представление для удаления интервала через HTMX-запрос
-class DeleteIntervalViewHTMX(LoginRequiredMixin, View):
-    """
-    Класс для обработки HTMX-запросов на удаление интервала.
-    """
-
-    # Метод обработки HTTP DELETE-запроса
-    login_url = 'login'
-
-    def delete(self, request, pk):
-        # Получаем объект TimeInterval по первичному ключу или возвращаем 404
-        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
-        # Удаляем найденный интервал
-        interval.delete()
-        # Возвращаем пустой HTTP-ответ (без содержимого)
-        return HttpResponse()
-
-
-# class UpdateIntervalView(LoginRequiredMixin, View):
-#     model = TimeInterval
-#     form_class = TimeIntervalFormEdit
-#     template_name = 'time_tracking_main/time_interval_new.html'
-#     success_url = reverse_lazy('home')
-#     login_url = 'login'
-#
-#     def get_object(self):
-#         pk = self.kwargs.get('pk')
-#         return get_object_or_404(TimeInterval, pk=pk)
-#
-#     def get_form(self, instance=None):
-#         if instance is None:
-#             instance = self.get_object()
-#         return self.form_class(instance=instance)
-#
-#     def get(self, request, *args, **kwargs):
-#         obj = self.get_object()
-#         selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
-#         form = self.get_form(instance=obj)
-#         if request.headers.get('HX-Request'):
-#             html = render_to_string(
-#                 'inline_htmx/interval_edit_form.html',
-#                 {'interval': obj, 'form': form, 'selected_date': selected_date},
-#                 request=request
-#             )
-#             return HttpResponse(html)
-#         return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
-#
-#     def form_valid(self, form, obj, selected_date, request):
-#         start_time = form.cleaned_data['start_time']
-#         end_time = form.cleaned_data['end_time']
-#         if end_time <= start_time:
-#             messages.warning(request, f'Время окончания не может быть меньше или равно времени начала! {end_time}')
-#             if request.headers.get('HX-Request'):
-#                 html = render_to_string(
-#                     'inline_htmx/interval_edit_form.html',
-#                     {'interval': obj, 'form': form, 'selected_date': selected_date},
-#                     request=request
-#                 )
-#                 return HttpResponse(html, status=400)
-#             return render(request, self.template_name,
-#                           {'form': form, 'interval': obj, 'selected_date': selected_date})
-#         form.save()
-#         if request.headers.get('HX-Request'):
-#             html = render_to_string(
-#                 'inline_htmx/interval_row.html',
-#                 {'interval': obj, 'selected_date': selected_date},
-#                 request=request
-#             )
-#             return HttpResponse(html)
-#
-#         if request.headers.get('HX-Request'):
-#             storage = get_messages(request)
-#             html = render_to_string('inline_htmx/messages.html', {'messages': storage}, request=request)
-#             return HttpResponse(html, status=400, headers={'HX-Trigger': 'show-messages'})
-#
-#         return redirect(self.success_url)
-#
-#     def post(self, request, *args, **kwargs):
-#         obj = self.get_object()
-#         form = self.form_class(request.POST, instance=obj)
-#         selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
-#         if form.is_valid():
-#             return self.form_valid(form, obj, selected_date, request)
-#         else:
-#             if request.headers.get('HX-Request'):
-#                 html = render_to_string(
-#                     'inline_htmx/interval_edit_form.html',
-#                     {'interval': obj, 'form': form, 'selected_date': selected_date},
-#                     request=request
-#                 )
-#                 return HttpResponse(html, status=400)
-#             return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
-#
-# --- Новый класс UpdateIntervalView на View (минималистичный, только HTMX) ---
-class UpdateIntervalView(LoginRequiredMixin, View):
-    # Обработка POST-запроса для обновления интервала
-    def post(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
-        form = TimeIntervalFormEdit(request.POST, instance=interval)
-        if form.is_valid():
-            start_time = form.cleaned_data.get('start_time')
-            end_time = form.cleaned_data.get('end_time')
-            if end_time is not None and start_time is not None and end_time <= start_time:
-                messages.warning(request, 'Время окончания не может быть меньше или равно времени начала!')
-                if request.headers.get('HX-Request'):
-                    html = render_to_string(
-                        'inline_htmx/interval_edit_form.html',
-                        {
-                            'interval': interval,
-                            'form': form,
-                            'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
-                        },
-                        request=request
-                    )
-                    return HttpResponse(html, status=400)
-                return render(request, 'time_tracking_main/time_interval_new.html', {'form': form, 'interval': interval})
-            form.save()
-            if request.headers.get('HX-Request'):
-                html = render_to_string(
-                    'inline_htmx/interval_row.html',
-                    {
-                        'interval': interval,
-                        'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
-                    },
-                    request=request
-                )
-                return HttpResponse(html)
-            return redirect('home')
-        else:
-            if request.headers.get('HX-Request'):
-                messages.warning(request, 'Ошибка валидации формы!')
-                html = render_to_string(
-                    'inline_htmx/interval_edit_form.html',
-                    {
-                        'interval': interval,
-                        'form': form,
-                        'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
-                    },
-                    request=request
-                )
-                return HttpResponse(html, status=400)
-            return render(request, 'time_tracking_main/time_interval_new.html', {'form': form, 'interval': interval})
-
-    # Обработка GET-запроса для отображения формы редактирования
-    def get(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk, user=request.user)
-        form = TimeIntervalFormEdit(instance=interval)
-        if request.headers.get('HX-Request'):
-            html = render_to_string(
-                'inline_htmx/interval_edit_form.html',
-                {
-                    'interval': interval,
-                    'form': form,
-                    'selected_date': interval.date_create.date() if hasattr(interval, 'date_create') else None
-                },
-                request=request
-            )
-            return HttpResponse(html)
-        return render(request, 'time_tracking_main/time_interval_new.html', {'form': form, 'interval': interval})
-
-# --- Старый класс UpdateIntervalView (закомментирован) ---
-'''
-class UpdateIntervalView(LoginRequiredMixin, View):
-    # Модель, с которой работает представление
-    model = TimeInterval
-    # Форма для редактирования интервала
-    form_class = TimeIntervalFormEdit
-    # Шаблон для отображения формы редактирования
-    # template_name = 'time_tracking_main/time_interval_new.html'
-    # URL для перенаправления после успешного обновления
-    success_url = reverse_lazy('home')
-    # URL для страницы логина, если пользователь не авторизован
-    # login_url = 'login'
-
-    # Получение объекта интервала по первичному ключу из URL
-    def get_object(self):
-        pk = self.kwargs.get('pk')
-        return get_object_or_404(TimeInterval, pk=pk)
-
-    # Получение формы для редактирования, с передачей экземпляра интервала
-    def get_form(self, instance=None):
-        if instance is None:
-            instance = self.get_object()
-        return self.form_class(instance=instance)
-
-    # Обработка GET-запроса: отображение формы редактирования
-    def get(self, request, *args, **kwargs):
-        obj = self.get_object()
-        # Получение выбранной даты, если она есть у объекта
-        selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
-        form = self.get_form(instance=obj)
-        # Если запрос от HTMX, возвращаем только HTML формы
-        if request.headers.get('HX-Request'):
-            html = render_to_string(
-                'inline_htmx/interval_edit_form.html',
-                {'interval': obj, 'form': form, 'selected_date': selected_date},
-                request=request
-            )
-            return HttpResponse(html)
-        # Обычный рендеринг страницы с формой
-        return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
-
-    # Проверка и сохранение формы при валидных данных
-    def form_valid(self, form, obj, selected_date, request):
-        start_time = form.cleaned_data['start_time']
-        end_time = form.cleaned_data['end_time']
-        # Проверка: время окончания не может быть меньше или равно времени начала
-        if end_time <= start_time:
-            messages.warning(request, f'Время окончания не может быть меньше или равно времени начала! {end_time}')
-            if request.headers.get('HX-Request'):
-                storage = get_messages(request)
-                html = render_to_string('includes/messages.html', {'messages': storage}, request=request)
-                form_html = render_to_string(
-                    'inline_htmx/interval_edit_form.html',
-                    {'interval': obj, 'form': form, 'selected_date': selected_date},
-                    request=request
-                )
-                return HttpResponse(html + form_html, status=400)
-            return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
-        # # Сохраняем изменения, если всё корректно
-        form.save()
-        return redirect(self.success_url)
-
-    # Обработка POST-запроса: получение и валидация формы
-    def post(self, request, *args, **kwargs):
-        obj = self.get_object()
-        form = self.form_class(request.POST, instance=obj)
-        selected_date = obj.date_create.date() if hasattr(obj, 'date_create') else None
-        # Если форма валидна, вызываем обработчик успешной валидации
-        if form.is_valid():
-            return self.form_valid(form, obj, selected_date, request)
-        else:
-            # Если запрос от HTMX, возвращаем сообщения и форму с ошибкой
-            if request.headers.get('HX-Request'):
-                storage = get_messages(request)
-                html = render_to_string('includes/messages.html', {'messages': storage}, request=request)
-                form_html = render_to_string(
-                    'inline_htmx/interval_edit_form.html',
-                    {'interval': obj, 'form': form, 'selected_date': selected_date},
-                    request=request
-                )
-                return HttpResponse(html + form_html, status=400)
-            # Обычный рендеринг страницы с ошибкой
-            return render(request, self.template_name, {'form': form, 'interval': obj, 'selected_date': selected_date})
-'''
+        return TimeInterval.objects.filter(counter__user=self.request.user)

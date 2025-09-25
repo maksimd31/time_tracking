@@ -1,0 +1,230 @@
+{% load custom_filters %}
+{% load chart_tags %}
+
+<div id="dashboard-root"
+     hx-get="{% url 'home' %}"
+     hx-target="#dashboard-root"
+     hx-swap="outerHTML"
+     hx-trigger="refresh-dashboard from:body">
+    <section class="hero-card mb-5">
+        <div class="d-flex flex-column flex-lg-row align-items-center">
+            <div class="me-lg-5 mb-4 mb-lg-0">
+                <h1 class="mb-3">Ваши проекты и задачи — под контролем</h1>
+                <p>
+                    Создавайте отдельные счетчики для разных направлений, фиксируйте интервалы в пару кликов и
+                    анализируйте, куда уходит время.
+                </p>
+                <div class="d-flex gap-3">
+                    <a class="btn btn-light text-dark" href="{% url 'counter_create' %}">Новый счетчик</a>
+                    <a class="btn btn-outline-light" href="{% url 'counter_summary' %}">Посмотреть аналитику</a>
+                </div>
+            </div>
+            <div class="text-center text-lg-start">
+                <div class="d-inline-flex flex-column px-4 py-3 bg-white text-dark rounded-4" style="color: var(--text-color);">
+                    <span class="text-muted-soft">Итог за {{ selected_date|ru_date }}</span>
+                    <span class="fs-3 fw-bold"
+                          data-total-duration
+                          data-total-base="{{ overall_total|duration_seconds }}"
+                          {% if active_interval %}
+                              data-total-start="{{ active_interval.day|date:'Y-m-d' }}T{{ active_interval.start_time|time:'H:i:s' }}"
+                          {% endif %}>{{ overall_total|duration_format }}</span>
+                    {% if active_counter %}
+                        <a class="text-decoration-none mt-2" href="{% url 'counter_history' active_counter.id %}">
+                            <span class="badge-tag bg-light text-dark">{{ active_counter.name }} • открыть</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-6 col-lg-3">
+                    <label for="date" class="form-label text-muted-soft">Дата</label>
+                    <input type="date" id="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label text-muted-soft">Итого за день</label>
+                    <div class="badge-tag bg-light text-dark"
+                         data-total-duration
+                         data-total-base="{{ overall_total|duration_seconds }}"
+                         {% if active_interval %}
+                             data-total-start="{{ active_interval.day|date:'Y-m-d' }}T{{ active_interval.start_time|time:'H:i:s' }}"
+                         {% endif %}>{{ overall_total|duration_format }}</div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label text-muted-soft">Всего счетчиков</label>
+                    <div class="badge-tag bg-light text-dark">{{ counter_total }}</div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label text-muted-soft">Активный счетчик</label>
+                    {% if active_counter %}
+                        <div class="badge-tag bg-light text-dark">{{ active_counter.name }}</div>
+                    {% else %}
+                        <div class="text-muted-soft">Нет активных счетчиков</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 d-flex flex-column flex-md-row gap-2">
+                    <button type="submit" class="btn btn-primary">Обновить</button>
+                    <a class="btn btn-outline-secondary" href="{% url 'counter_create' %}">Создать счетчик</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if chart_labels %}
+    <div class="card mb-4">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Распределение времени по счетчикам</span>
+            <span class="text-muted-soft">часов</span>
+        </div>
+        <div class="card-body">
+            {% if chart_total > 0 %}
+                <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+                    <div class="chart-container" style="position: relative; width: 200px; height: 200px;">
+                        <canvas id="countersChart" width="200" height="200"></canvas>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start flex-grow-1">
+                        {% for label in chart_labels %}
+                            {% with value=chart_values|index:forloop.counter0 color=chart_colors|index:forloop.counter0 %}
+                                <span class="badge-tag" style="background: {{ color }}; color: #fff;">
+                                    {{ label }} • {{ value|floatformat:1 }} ч
+                                </span>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-muted-soft mb-0">Нет завершенных интервалов для отображения диаграммы.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if counters %}
+    <div class="row g-4">
+        {% for counter in counters %}
+            {% with stats=counter_stats|get_item:counter.id %}
+        <div class="col-xl-4 col-lg-6">
+            <div class="card h-100 counter-card {% if stats.active_interval %}counter-card-active{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="counter-heading flex-grow-1 pe-3">
+                            <span class="badge-tag" style="background-color: {{ counter.color }}; color: #fff;">{{ selected_date|date:'d.m' }}</span>
+                            <h5 class="mt-3 mb-1 counter-heading-title"><a class="text-decoration-none" href="{% url 'counter_history' counter.id %}">{{ counter.name|wrap_long_name }}</a></h5>
+                            <p class="text-muted-soft mb-0">{{ stats.interval_count }} интервал(ов) сегодня</p>
+                        </div>
+                        <div class="timer-wrap {% if stats.active_interval %}timer-wrap-active{% endif %}">
+                            {% if stats.active_interval %}
+                                <div class="status-pill mt-2">
+                                    <span class="spinner-grow spinner-grow-sm text-primary" role="status" aria-hidden="true"></span>
+                                </div>
+                            {% endif %}
+                            <a class="timer-link" href="{% url 'counter_history' counter.id %}">
+                                <span class="timer-main"
+                                      data-counter-timer
+                                      data-offset="{{ stats.total_duration|duration_seconds }}"
+                                      {% if stats.active_interval %}
+                                        data-interval-timer
+                                        data-start="{{ stats.active_interval.day|date:'Y-m-d' }}T{{ stats.active_interval.start_time|time:'H:i:s' }}"
+                                      {% endif %}>
+                                    {{ stats.total_duration|duration_format }}
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form method="post" action="{% url 'counter_start' counter.id %}"
+                                  class="counter-action-form start-form"
+                                  hx-post="{% url 'counter_start' counter.id %}"
+                                  hx-target="#dashboard-root"
+                                  hx-swap="outerHTML"
+                                  hx-disabled-elt="button">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn btn-outline-secondary btn-start"
+                                        {% if active_counter_id and active_counter_id != counter.id %}disabled{% endif %}>
+                                    Старт
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'counter_stop' counter.id %}"
+                                  class="counter-action-form stop-form"
+                                  hx-post="{% url 'counter_stop' counter.id %}"
+                                  hx-target="#dashboard-root"
+                                  hx-swap="outerHTML"
+                                  hx-disabled-elt="button">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn btn-outline-secondary btn-stop"
+                                        {% if not stats.active_interval %}disabled{% endif %}>
+                                    Стоп
+                                </button>
+                            </form>
+                            <a class="btn btn-outline-secondary" href="{% url 'counter_history' counter.id %}">Доп</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% endfor %}
+    </div>
+    {% include 'includes/pagination.html' %}
+    {% else %}
+    <div class="card border-0">
+        <div class="card-body text-center py-5">
+            <h4 class="fw-semibold mb-3">Начните с первого счетчика</h4>
+            <p class="text-muted-soft mb-4">Создайте категорию, чтобы фиксировать задачи и видеть динамику по ней.</p>
+            <a class="btn btn-primary" href="{% url 'counter_create' %}">Создать счетчик</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if chart_labels and chart_total > 0 %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function() {
+            const el = document.getElementById('countersChart');
+            if (!el) return;
+            const chart = new Chart(el, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ chart_labels|safe }},
+                    datasets: [{
+                        data: {{ chart_values|safe }},
+                        backgroundColor: {{ chart_colors|safe }},
+                        hoverOffset: 16,
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    return `${label}: ${value.toFixed(2)} ч`;
+                                }
+                            },
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#e2e8f0'
+                        }
+                    },
+                    cutout: '70%',
+                    radius: '90%',
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true,
+                        duration: 1600,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        })();
+    </script>
+    {% endif %}
+</div>

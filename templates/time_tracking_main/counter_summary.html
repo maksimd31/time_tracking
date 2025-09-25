@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Аналитика</h1>
+        <p class="text-muted-soft mb-0">Просматривайте суммарные показатели по счетчикам и дням</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label text-muted-soft" for="period">Период</label>
+                <select id="period" name="period" class="form-select" onchange="toggleCustomRange(this.value)">
+                    {% for key, label in periods.items %}
+                        <option value="{{ key }}" {% if period_key == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6" id="startWrapper">
+                <label class="form-label text-muted-soft" for="start">С даты</label>
+                <input type="date" id="start" name="start" value="{{ start|date:'Y-m-d' }}" class="form-control" {% if period_key != 'custom' %}disabled{% endif %}>
+            </div>
+            <div class="col-lg-3 col-md-6" id="endWrapper">
+                <label class="form-label text-muted-soft" for="end">По дату</label>
+                <input type="date" id="end" name="end" value="{{ end|date:'Y-m-d' }}" class="form-control" {% if period_key != 'custom' %}disabled{% endif %}>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <button type="submit" class="btn btn-primary w-100">Показать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body d-flex flex-column flex-md-row gap-4">
+        <div>
+            <span class="text-muted-soft">Период</span>
+            <p class="fs-5 fw-semibold mb-0">{{ start|date:'d.m.Y' }} — {{ end|date:'d.m.Y' }}</p>
+        </div>
+        <div>
+            <span class="text-muted-soft">Всего времени</span>
+            <p class="fs-5 fw-semibold mb-0">{{ summary_total|duration_format }}</p>
+        </div>
+    </div>
+</div>
+
+{% if per_counter %}
+<div class="card mb-4">
+    <div class="card-header bg-white border-0"><span class="fw-semibold">Траты времени по счетчикам</span></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle">
+                <thead>
+                <tr>
+                    <th scope="col">Счетчик</th>
+                    <th scope="col">Интервалов</th>
+                    <th scope="col">Время</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in per_counter %}
+                    <tr>
+                        <td>
+                            <span class="badge-tag" style="background-color: {{ row.counter__color }}; color: #fff;">&nbsp;</span>
+                            {{ row.counter__name }}
+                        </td>
+                        <td>{{ row.interval_count }}</td>
+                        <td>{{ row.total|duration_format }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-body text-center py-5">
+        <h5 class="fw-semibold">Нет завершенных интервалов</h5>
+        <p class="text-muted-soft mb-0">Создайте и завершите хотя бы один интервал в выбранном периоде.</p>
+    </div>
+</div>
+{% endif %}
+
+{% if per_day %}
+<div class="card mb-4">
+    <div class="card-header bg-white border-0"><span class="fw-semibold">Динамика по дням</span></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle">
+                <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Время</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in per_day %}
+                    <tr>
+                        <td>{{ row.day|date:'d.m.Y' }}</td>
+                        <td>{{ row.total|duration_format }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function toggleCustomRange(value) {
+        const isCustom = value === 'custom';
+        document.getElementById('start').disabled = !isCustom;
+        document.getElementById('end').disabled = !isCustom;
+    }
+    toggleCustomRange('{{ period_key }}');
+</script>
+{% endblock %}

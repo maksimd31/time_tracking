@@ -1,32 +1,53 @@
-<!-- Выставляем цвет -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <!-- Заголовок при нажатие возвращает на домашнюю страницу -->
-        <a class="navbar-brand" href="{% url 'home' %}">Время учебы</a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span
-                class="navbar-toggler-icon"></span></button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+{% load static account_tags %}
+<nav class="navbar navbar-expand-lg navbar-modern sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <span class="mark">⏱</span> Время Учёбы
+        </a>
+        <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 {% if user.is_authenticated %}
+                    {% user_profile request.user as nav_profile %}
                     <li class="nav-item">
-                    <li class="nav-item">
-                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                            {% csrf_token %}
-                            <a class="nav-link" href="#" onclick="this.closest('form').submit();">Выйти из системы</a>
-                        </form>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Счетчики</a>
                     </li>
                     <li class="nav-item">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'profile_detail' request.user.profile.slug %}">Перейти в профиль</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'counter_summary' %}active{% endif %}" href="{% url 'counter_summary' %}">Аналитика</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="avatar-thumb">
+                                {% if nav_profile.avatar_url %}
+                                    <img src="{{ nav_profile.avatar_url }}" alt="{{ request.user.username }}" />
+                                {% else %}
+                                    <span class="avatar-initial">{{ nav_profile.initial }}</span>
+                                {% endif %}
+                            </span>
+                            <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                            {% if nav_profile.profile %}
+                                <li><a class="dropdown-item" href="{% url 'profile_detail' nav_profile.profile.slug %}">Профиль и настройки</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post" class="px-3">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link p-0 text-decoration-none">Выйти</button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Регистрация</a>
+                    <li class="nav-item me-lg-2">
+                        <a class="nav-link" href="{% url 'login' %}">Войти</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Войти</a>
+                        <a class="btn btn-primary" href="{% url 'register' %}">Создать аккаунт</a>
                     </li>
                 {% endif %}
             </ul>

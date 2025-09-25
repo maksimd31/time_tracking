@@ -1,0 +1,28 @@
+{% load custom_filters %}
+<tr class="history-row"
+    hx-get="{% url 'interval_update' interval.id %}"
+    hx-trigger="dblclick"
+    hx-target="this"
+    hx-swap="outerHTML">
+    <td>{{ interval.day|date:'d.m.Y' }}</td>
+    <td>{{ interval.start_time|default:"—" }}</td>
+    <td>{% if interval.end_time %}{{ interval.end_time }}{% else %}<span class="text-success fw-semibold">Активный</span>{% endif %}</td>
+    <td>{% if interval.duration %}{{ interval.duration|duration_format }}{% else %}—{% endif %}</td>
+    <td class="text-end">
+        <button class="disbtn btn-primary"
+                hx-get="{% url 'interval_update' interval.id %}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                title="Редактировать">
+            <span style="font-size: 1.2em;">✏️</span>
+        </button>
+        <button class="disbtn btn-danger"
+                hx-delete="{% url 'interval_delite_htmx' interval.id %}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                hx-confirm="Удалить интервал?"
+                title="Удалить">
+            <span style="font-size: 1.2em;">🗑️</span>
+        </button>
+    </td>
+</tr>

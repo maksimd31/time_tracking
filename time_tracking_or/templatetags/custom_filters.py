@@ -1,7 +1,9 @@
+from datetime import timedelta
+
 from django import template
 from django.utils import timezone
-from datetime import timedelta
-import pytz
+from django.utils.safestring import mark_safe
+from pytils.dt import ru_strftime
 
 register = template.Library()
 
@@ -59,6 +61,51 @@ def get_summary_total_time(daily_summaries, selected_date):
         return duration_format(summary.total_time)
 
     return "Нет данных"
+
+
+@register.filter
+def ru_date(value, fmt="%d %B %Y"):
+    if not value:
+        return ""
+    try:
+        return ru_strftime(fmt, value)
+    except Exception:
+        return value
+
+
+@register.filter
+def get_item(mapping, key):
+    if isinstance(mapping, dict):
+        return mapping.get(key)
+    return None
+
+
+@register.filter
+def duration_seconds(duration):
+    if isinstance(duration, timedelta):
+        return int(duration.total_seconds())
+    try:
+        hours, minutes, seconds = map(int, str(duration).split(':'))
+        return hours * 3600 + minutes * 60 + seconds
+    except Exception:
+        return 0
+
+
+@register.filter
+def wrap_long_name(value, chunk_size=10):
+    """Вставляет перенос строки через каждые chunk_size символов."""
+    if not value:
+        return ""
+    try:
+        chunk = int(chunk_size)
+    except (TypeError, ValueError):
+        chunk = 10
+    if chunk <= 0:
+        chunk = 10
+    if len(value) <= chunk:
+        return value
+    parts = [value[i:i + chunk] for i in range(0, len(value), chunk)]
+    return mark_safe('<wbr>'.join(parts))
 
 
 

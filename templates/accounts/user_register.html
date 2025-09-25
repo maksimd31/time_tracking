@@ -1,16 +1,29 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="card mb-3 border-0 nth-shadow">
-        <div class="card-body">
-            <div class="card-title nth-card-title">
-                <h4>Регистрация на сайте</h4>
+<div class="row justify-content-center">
+    <div class="col-xl-5 col-lg-6">
+        <div class="card">
+            <div class="card-body p-5">
+                <h2 class="h4 fw-semibold mb-3">Создание аккаунта</h2>
+                <p class="text-muted-soft mb-4">Откройте доступ ко всем возможностям: множественные счетчики, аналитика и история.</p>
+                <form method="post" action="{% url 'register' %}" class="vstack gap-3">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                        <div>
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small">{{ field.errors|join:', ' }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                </form>
+                <div class="text-muted-soft mt-3">
+                    Уже есть аккаунт? <a href="{% url 'login' %}">Войдите</a>
+                </div>
             </div>
-            <form method="post" action="{% url 'register' %}">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-dark mt-2">Зарегистрироваться</button>
-            </form>
         </div>
     </div>
+</div>
 {% endblock %}

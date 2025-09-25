@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-xl-5">
+        <div class="card">
+            <div class="card-body p-5 text-center">
+                <span class="badge-tag bg-danger text-white mb-3">Внимание</span>
+                <h2 class="h4 fw-semibold mb-3">Удалить счетчик «{{ object.name }}»?</h2>
+                <p class="text-muted-soft mb-4">
+                    Все интервалы, связанные с этим счетчиком, будут удалены безвозвратно. Это действие нельзя отменить.
+                </p>
+                <form method="post" class="d-flex flex-column gap-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Удалить окончательно</button>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">Отмена</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

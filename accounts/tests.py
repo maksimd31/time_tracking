@@ -26,3 +26,19 @@ class UserLoginRememberMeTest(TestCase):
         self.assertEqual(response.status_code, 302)
         session_expiry = self.client.session.get_expiry_age()
         self.assertGreaterEqual(session_expiry, 60 * 60 * 24 * 13)  # сессия примерно 2 недели
+
+
+class UserRegistrationAutoLoginTest(TestCase):
+    def test_user_is_logged_in_after_registration(self):
+        register_url = reverse('register')
+        response = self.client.post(register_url, {
+            'username': 'newuser',
+            'password1': 'securepass12345',
+            'password2': 'securepass12345',
+            'email': 'newuser@example.com'
+        })
+        self.assertEqual(response.status_code, 302)
+        # после регистрации пользователь должен быть аутентифицирован
+        user = get_user_model().objects.get(username='newuser')
+        self.assertTrue('_auth_user_id' in self.client.session)
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.id)

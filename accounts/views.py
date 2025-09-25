@@ -19,6 +19,7 @@ from django.http import HttpResponseRedirect
 import secrets
 from django.shortcuts import render, redirect
 from dotenv import load_dotenv
+from django.contrib import messages
 
 load_dotenv()
 
@@ -49,8 +50,31 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Профиль пользователя: {self.object.user.username}'
         context['user'] = self.object.user  # Добавляем user в контекст
-
+        if self.request.user == self.object.user:
+            context.setdefault('user_form', UserUpdateForm(instance=self.object.user))
+            context.setdefault('profile_form', ProfileUpdateForm(instance=self.object))
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if request.user != self.object.user:
+            messages.error(request, 'Вы не можете изменять профиль другого пользователя.')
+            return redirect('profile_detail', slug=self.object.slug)
+
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=self.object)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            with transaction.atomic():
+                user_form.save()
+                profile_form.save()
+            messages.success(request, 'Настройки профиля обновлены.')
+            return redirect('profile_detail', slug=self.object.slug)
+
+        context = self.get_context_data()
+        context['user_form'] = user_form
+        context['profile_form'] = profile_form
+        return self.render_to_response(context)
 
 
 class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -103,6 +127,13 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Регистрация на сайте'
         return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = self.object
+        backend = 'django.contrib.auth.backends.ModelBackend'
+        login(self.request, user, backend=backend)
+        return response
 
 
 class UserLoginView(SuccessMessageMixin, LoginView):

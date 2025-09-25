@@ -3,28 +3,49 @@
 {% block content %}
     <script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js"></script>
 
-    <div class="mx-2">
-        {% include 'includes/inegrations.html' %}
-    </div>
-    <div class="card mb-3 border-0 nth-shadow">
-        <div class="card-body">
-            <div class="card-title nth-card-title">
-                <h4>Вход на сайт</h4>
-            </div>
-            <form method="post" action="{% url 'login' %}">
-                {% csrf_token %}
-
-                {{ form.as_p }}
-                <div class="d-grid gap-2 d-md-block mt-2">
-                    <button type="submit" class="btn btn-dark">войти</button>
+    <div class="row justify-content-center">
+        <div class="col-xl-5 col-lg-6">
+            <div class="card mb-4">
+                <div class="card-body p-5">
+                    <h2 class="h4 fw-semibold mb-3">Вход в аккаунт</h2>
+                    <p class="text-muted-soft mb-4">Продолжайте отслеживать свои проекты. Заполните форму или авторизуйтесь через соцсети.</p>
+                    <form method="post" action="{% url 'login' %}" class="vstack gap-3">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div>
+                            {{ form.username.label_tag }}
+                            {{ form.username }}
+                            {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors|join:', ' }}</div>{% endif %}
+                        </div>
+                        <div>
+                            {{ form.password.label_tag }}
+                            {{ form.password }}
+                            {% if form.password.errors %}<div class="text-danger small">{{ form.password.errors|join:', ' }}</div>{% endif %}
+                        </div>
+                        {% if form.remember_me %}
+                        <div class="form-check">
+                            {{ form.remember_me }}
+                            <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">Запомнить меня</label>
+                        </div>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">Войти</button>
+                    </form>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a class="text-muted-soft" href="{% url 'password_reset' %}">Забыли пароль?</a>
+                        <a class="text-muted-soft" href="{% url 'register' %}">Создать аккаунт</a>
+                    </div>
                 </div>
-            </form>
-
+            </div>
+            <div class="card border-0">
+                <div class="card-body p-4 text-center">
+                    <a href="{% url 'social:begin' 'vk-oauth2' %}" class="btn btn-outline-secondary w-100 mb-3">Войти через VK</a>
+                    <div class="mx-2">
+                        {% include 'includes/inegrations.html' %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <a href="{% url 'password_reset' %}">Забыли пароль?</a>
-
     </div>
-    <a href="{% url 'social:begin' 'vk-oauth2' %}" class="btn btn-light mx-2">Войти через VK</a>
 
 
 {#    <div>#}
@@ -179,5 +200,4 @@
   </script>
 </div>
 {% endblock %}
-
 

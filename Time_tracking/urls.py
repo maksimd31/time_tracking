@@ -12,10 +12,8 @@ sitemaps = {
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
-                  path("accounts/", include("django.contrib.auth.urls")),
-
-                  path('', include("time_tracking_or.urls")),
                   path('', include('accounts.urls')),
+                  path('', include("time_tracking_or.urls")),
                   path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
                   # path('auth/', include('rest_framework_social_oauth2.urls', namespace='rest_framework_social_oauth2')),
                   # path('social/', include('social_django.urls', namespace='social')),

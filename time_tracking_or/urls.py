@@ -1,22 +1,35 @@
 from django.urls import path
+
 from .views import (
-    TimeIntervalView, StartIntervalView, StopIntervalView, DailySummaryView, AddManualIntervalView, DeleteIntervalView,
-    UpdateIntervalView, IntervalDeteil, IntervalDetailNew, IntervalRowHtmxView,
-    DeleteIntervalViewHTMX)
+    CounterHistoryView,
+    CounterIntervalDeleteView,
+    CounterIntervalUpdateView,
+    CounterManualIntervalCreateView,
+    CounterPauseView,
+    CounterStartView,
+    CounterStopView,
+    CounterSummaryView,
+    DeleteIntervalViewHTMX,
+    IntervalDetailView,
+    TimeCounterCreateView,
+    TimeCounterDeleteView,
+    TimeCounterListView,
+    TimeCounterUpdateView,
+)
 
 urlpatterns = [
-    # path('', views.IndexView.as_view(), name='home'),
-    path('', TimeIntervalView.as_view(), name='home'),
-    path('time-interval/start/', StartIntervalView.as_view(), name='start_interval'),
-    path('time-interval/stop/', StopIntervalView.as_view(), name='stop_interval'),
-    path('daily-summary/', DailySummaryView.as_view(), name='daily_summary_view'),
-    path('add_manual_interval/', AddManualIntervalView.as_view(), name='add_manual_interval'),
-    path('delete_interval/<int:pk>/', DeleteIntervalView.as_view(), name='delete_interval'),
-    path('interval/<int:pk>/update/', UpdateIntervalView.as_view(), name='update_interval'),
-    path('interval_detail/<int:pk>/', IntervalDeteil.as_view(), name='interval_detail'),
-    path('interval_detail_new/<int:pk>/', IntervalDetailNew.as_view(), name='interval_detail_new'),
-    # path('time-interval/reset/', ResetIntervalsView.as_view(), name='reset_intervals'),
-    path('interval/<int:pk>/row/', IntervalRowHtmxView.as_view(), name='interval_row_htmx'),
+    path('', TimeCounterListView.as_view(), name='home'),
+    path('counters/create/', TimeCounterCreateView.as_view(), name='counter_create'),
+    path('counters/<int:pk>/update/', TimeCounterUpdateView.as_view(), name='counter_update'),
+    path('counters/<int:pk>/delete/', TimeCounterDeleteView.as_view(), name='counter_delete'),
+    path('counters/<int:pk>/start/', CounterStartView.as_view(), name='counter_start'),
+    path('counters/<int:pk>/pause/', CounterPauseView.as_view(), name='counter_pause'),
+    path('counters/<int:pk>/stop/', CounterStopView.as_view(), name='counter_stop'),
+    path('counters/<int:pk>/history/', CounterHistoryView.as_view(), name='counter_history'),
+    path('counters/<int:pk>/manual/', CounterManualIntervalCreateView.as_view(), name='counter_manual_interval'),
+    path('summary/', CounterSummaryView.as_view(), name='counter_summary'),
+    path('intervals/<int:pk>/update/', CounterIntervalUpdateView.as_view(), name='interval_update'),
+    path('intervals/<int:pk>/delete/', CounterIntervalDeleteView.as_view(), name='interval_delete'),
     path('interval/<int:pk>/delete/', DeleteIntervalViewHTMX.as_view(), name='interval_delite_htmx'),
-
+    path('intervals/<int:pk>/', IntervalDetailView.as_view(), name='interval_detail'),
 ]
