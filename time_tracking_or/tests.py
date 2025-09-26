@@ -1,3 +1,5 @@
+"""Unit tests for counter workflows and interval timing logic."""
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -9,7 +11,9 @@ from .models import TimeCounter, TimeInterval
 
 
 class HomeAnonymousViewTest(TestCase):
+    """Ensure landing page suggests registration to guests."""
     def test_home_prompts_registration_for_anonymous_user(self):
+        """Anonymous visitors should see welcome template and register link."""
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'time_tracking_main/welcome.html')
@@ -17,13 +21,16 @@ class HomeAnonymousViewTest(TestCase):
 
 
 class CounterViewsTest(TestCase):
+    """Exercise start/stop guard rails for counters."""
     def setUp(self):
+        """Create a user with two counters ready for interaction."""
         self.user = get_user_model().objects.create_user(username='demo', password='pass12345')
         self.client.force_login(self.user)
         self.counter_primary = TimeCounter.objects.create(user=self.user, name='Работа')
         self.counter_secondary = TimeCounter.objects.create(user=self.user, name='Учеба')
 
     def test_start_counter_creates_active_interval(self):
+        """Starting a counter should open a new active interval."""
         response = self.client.post(reverse('counter_start', args=[self.counter_primary.pk]), follow=True)
         self.assertEqual(response.status_code, 200)
         interval = TimeInterval.objects.filter(counter=self.counter_primary, end_time__isnull=True).first()
@@ -32,6 +39,7 @@ class CounterViewsTest(TestCase):
         self.assertEqual(interval.counter, self.counter_primary)
 
     def test_cannot_start_second_counter_while_first_is_active(self):
+        """Starting another counter while one runs should be prevented."""
         self.client.post(reverse('counter_start', args=[self.counter_primary.pk]))
         response = self.client.post(reverse('counter_start', args=[self.counter_secondary.pk]), follow=True)
         self.assertEqual(response.status_code, 200)
@@ -40,6 +48,7 @@ class CounterViewsTest(TestCase):
         self.assertEqual(active_primary, 1)
 
     def test_stop_counter_sets_duration(self):
+        """Stopping an active interval should set end time and duration."""
         self.client.post(reverse('counter_start', args=[self.counter_primary.pk]))
         interval = TimeInterval.objects.get(counter=self.counter_primary, end_time__isnull=True)
         interval.start_time = (timezone.localtime() - timedelta(minutes=30)).time()

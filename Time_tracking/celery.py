@@ -1,3 +1,5 @@
+"""Celery application configuration for asynchronous background tasks."""
+
 import os
 
 from celery import Celery

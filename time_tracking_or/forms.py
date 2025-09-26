@@ -1,9 +1,12 @@
+"""Forms for counters and intervals with custom widgets and validation."""
+
 from django.forms import ModelForm, TextInput, TimeInput
 from django import forms
 from .models import TimeInterval, TimeCounter
 
 
 class TimeCounterForm(forms.ModelForm):
+    """Bind name/color fields for creating or editing a counter."""
     class Meta:
         model = TimeCounter
         fields = ['name', 'color']
@@ -13,6 +16,7 @@ class TimeCounterForm(forms.ModelForm):
         }
 
 class TimeIntervalFormEdit(ModelForm):
+    """Edit existing intervals with basic temporal validation."""
     class Meta:
         model = TimeInterval
         fields = ['day', 'start_time', 'end_time']
@@ -23,6 +27,7 @@ class TimeIntervalFormEdit(ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Adjust labels and hide the immutable day field for edits."""
         super().__init__(*args, **kwargs)
         self.fields['day'].label = 'Дата'
         self.fields['start_time'].label = 'Старт'
@@ -34,6 +39,7 @@ class TimeIntervalFormEdit(ModelForm):
             self.fields['day'].widget = forms.HiddenInput()
 
     def clean(self):
+        """Validate that the end time is not before the start time."""
         cleaned_data = super().clean()
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')

@@ -1,3 +1,5 @@
+"""Root URL configuration exposing admin, app routes, and sitemap."""
+
 from django.contrib.sitemaps.views import sitemap
 from time_tracking_or.sitemaps import TimeIntervalSitemap
 from django.urls import re_path

@@ -1,3 +1,5 @@
+"""Views that power counter dashboards, history pages, and HTMX endpoints."""
+
 from datetime import timedelta
 
 from django.contrib import messages
@@ -18,7 +20,7 @@ from .models import DailySummary, TimeCounter, TimeInterval
 
 
 def recalculate_daily_summary(user, day):
-    """Пересчитать суточный итог пользователя по всем счетчикам."""
+    """Recompute cached day summary for a specific user and date."""
     aggregate = TimeInterval.objects.filter(
         user=user,
         day=day,
@@ -43,11 +45,13 @@ def recalculate_daily_summary(user, day):
 
 
 class TimeCounterListView(ListView):
+    """Dashboard with counters, diagrams, and HTMX support."""
     template_name = 'time_tracking_main/counter_dashboard.html'
     context_object_name = 'counters'
     paginate_by = 6
 
     def dispatch(self, request, *args, **kwargs):
+        """Redirect anonymous users to the welcome screen."""
         if not request.user.is_authenticated:
             context = {
                 'login_url': reverse('login'),
@@ -57,6 +61,7 @@ class TimeCounterListView(ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_selected_date(self):
+        """Return the currently selected day, guarded against bad input."""
         date_str = self.request.GET.get('date')
         if not date_str:
             return timezone.localdate()
@@ -66,9 +71,11 @@ class TimeCounterListView(ListView):
             return timezone.localdate()
 
     def get_queryset(self):
+        """Limit counters to the current user."""
         return TimeCounter.objects.filter(user=self.request.user).order_by('name')
 
     def get_context_data(self, **kwargs):
+        """Collect aggregated stats, chart data, and HTMX helper context."""
         context = super().get_context_data(**kwargs)
         selected_date = self.get_selected_date()
         user_counters = TimeCounter.objects.filter(user=self.request.user).order_by('name')
@@ -138,60 +145,72 @@ class TimeCounterListView(ListView):
         return context
 
     def get_template_names(self):
+        """Return partial template when HTMX requests the dashboard."""
         if self.request.headers.get('HX-Request'):
             return ['time_tracking_main/_counter_dashboard_content.html']
         return [self.template_name]
 
 
 class TimeCounterCreateView(LoginRequiredMixin, CreateView):
+    """Form-based creation of a new counter."""
     model = TimeCounter
     form_class = TimeCounterForm
     template_name = 'time_tracking_main/counter_form.html'
     success_url = reverse_lazy('home')
 
     def form_valid(self, form):
+        """Attach the current user and show a success message."""
         form.instance.user = self.request.user
         messages.success(self.request, 'Счетчик создан.')
         return super().form_valid(form)
 
 
 class TimeCounterUpdateView(LoginRequiredMixin, UpdateView):
+    """Allow a user to rename or recolor an existing counter."""
     model = TimeCounter
     form_class = TimeCounterForm
     template_name = 'time_tracking_main/counter_form.html'
     success_url = reverse_lazy('home')
 
     def get_queryset(self):
+        """Restrict updates to counters owned by the requester."""
         return TimeCounter.objects.filter(user=self.request.user)
 
     def form_valid(self, form):
+        """Display a toast and persist changes."""
         messages.success(self.request, 'Счетчик обновлен.')
         return super().form_valid(form)
 
 
 class TimeCounterDeleteView(LoginRequiredMixin, DeleteView):
+    """Deletion confirmation and removal for a counter."""
     model = TimeCounter
     template_name = 'time_tracking_main/counter_confirm_delete.html'
     success_url = reverse_lazy('home')
 
     def get_queryset(self):
+        """Ensure users can delete only their own counters."""
         return TimeCounter.objects.filter(user=self.request.user)
 
     def delete(self, request, *args, **kwargs):
+        """Show a success message after the counter is removed."""
         messages.success(self.request, 'Счетчик удален.')
         return super().delete(request, *args, **kwargs)
 
 
 class CounterHistoryView(LoginRequiredMixin, ListView):
+    """Detailed list of intervals with filtering, pagination, and stats."""
     template_name = 'time_tracking_main/counter_history.html'
     context_object_name = 'intervals'
     paginate_by = 10
 
     def dispatch(self, request, *args, **kwargs):
+        """Cache the requested counter and assert ownership."""
         self.counter = get_object_or_404(TimeCounter, pk=self.kwargs['pk'], user=request.user)
         return super().dispatch(request, *args, **kwargs)
 
     def get_date_filters(self):
+        """Parse date query parameters into `date` objects."""
         start_str = self.request.GET.get('start')
         end_str = self.request.GET.get('end')
         start = end = None
@@ -208,6 +227,7 @@ class CounterHistoryView(LoginRequiredMixin, ListView):
         return start, end
 
     def get_queryset(self):
+        """Return intervals ordered by day and creation time."""
         qs = TimeInterval.objects.filter(counter=self.counter).order_by('-day', '-date_create')
         start, end = self.get_date_filters()
         if start:
@@ -217,6 +237,7 @@ class CounterHistoryView(LoginRequiredMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+        """Augment context with aggregated statistics for the listing."""
         context = super().get_context_data(**kwargs)
         start, end = self.get_date_filters()
         intervals = self.get_queryset().filter(end_time__isnull=False)
@@ -234,22 +255,27 @@ class CounterHistoryView(LoginRequiredMixin, ListView):
 
 
 class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
+    """HTMX-enabled inline editor for individual intervals."""
     model = TimeInterval
     form_class = TimeIntervalFormEdit
     template_name = 'time_tracking_main/interval_form.html'
 
     def get_success_url(self):
+        """Fallback redirect to the counter history page."""
         return reverse('counter_history', kwargs={'pk': self.object.counter_id})
 
     def get_queryset(self):
+        """Ensure users can edit only intervals belonging to their counters."""
         return TimeInterval.objects.filter(counter__user=self.request.user)
 
     def get_context_data(self, **kwargs):
+        """Expose the interval instance alongside the bound form."""
         context = super().get_context_data(**kwargs)
         context['interval'] = self.object
         return context
 
     def render_to_response(self, context, **response_kwargs):
+        """Return partial rows for HTMX or fallback to standard rendering."""
         if self.request.headers.get('HX-Request'):
             mode = self.request.GET.get('mode')
             template = 'time_tracking_main/partials/history_interval_edit_row.html'
@@ -262,6 +288,19 @@ class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
             )
             if number:
                 context['number'] = number
+            # Пробрасываем фильтры, чтобы шаблон мог восстановить скрытые инпуты
+            start = self.request.GET.get('start') or self.request.POST.get('start')
+            end = self.request.GET.get('end') or self.request.POST.get('end')
+            if start:
+                try:
+                    context['filter_start'] = timezone.datetime.strptime(start, '%Y-%m-%d').date()
+                except ValueError:
+                    context['filter_start'] = None
+            if end:
+                try:
+                    context['filter_end'] = timezone.datetime.strptime(end, '%Y-%m-%d').date()
+                except ValueError:
+                    context['filter_end'] = None
             return render(
                 self.request,
                 template,
@@ -271,6 +310,7 @@ class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
         return super().render_to_response(context, **response_kwargs)
 
     def form_valid(self, form):
+        """Persist changes, refresh summaries, and return updated markup."""
         original_day = self.get_object().day
         response = super().form_valid(form)
         recalculate_daily_summary(self.request.user, self.object.day)
@@ -338,6 +378,7 @@ class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
         return response
 
     def form_invalid(self, form):
+        """Re-render the editable row with errors for HTMX consumers."""
         if self.request.headers.get('HX-Request'):
             context = self.get_context_data(form=form)
             return render(
@@ -350,7 +391,9 @@ class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class CounterIntervalDeleteView(LoginRequiredMixin, View):
+    """Regular form-based deletion with redirect and messaging."""
     def post(self, request, pk):
+        """Delete an interval and recalculate summaries."""
         interval = get_object_or_404(TimeInterval, pk=pk, counter__user=request.user)
         counter_id = interval.counter_id
         day = interval.day
@@ -361,25 +404,30 @@ class CounterIntervalDeleteView(LoginRequiredMixin, View):
 
 
 class CounterManualIntervalCreateView(LoginRequiredMixin, CreateView):
+    """Manual interval creation form for adding historical data."""
     model = TimeInterval
     form_class = TimeIntervalFormEdit
     template_name = 'time_tracking_main/interval_form.html'
 
     def dispatch(self, request, *args, **kwargs):
+        """Fetch the counter upfront and enforce ownership."""
         self.counter = get_object_or_404(TimeCounter, pk=self.kwargs['pk'], user=request.user)
         return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
+        """Default the day to today for convenience."""
         initial = super().get_initial()
         initial['day'] = timezone.localdate()
         return initial
 
     def get_context_data(self, **kwargs):
+        """Add the counter to the template context."""
         context = super().get_context_data(**kwargs)
         context['counter'] = self.counter
         return context
 
     def form_valid(self, form):
+        """Attach user/counter links, then update daily summary."""
         form.instance.counter = self.counter
         form.instance.user = self.request.user
         messages.success(self.request, 'Интервал добавлен вручную.')
@@ -388,24 +436,30 @@ class CounterManualIntervalCreateView(LoginRequiredMixin, CreateView):
         return response
 
     def get_success_url(self):
+        """Redirect back to the history page after creation."""
         return reverse('counter_history', kwargs={'pk': self.counter.pk})
 
 
 class CounterBaseActionView(LoginRequiredMixin, View):
+    """Base class for start/pause/stop counter actions."""
     action_message = ''
 
     def post(self, request, pk):
+        """Resolve the counter and delegate to subclass handlers."""
         counter = get_object_or_404(TimeCounter, pk=pk, user=request.user)
         return self.handle(request, counter)
 
     def handle(self, request, counter):  # pragma: no cover - override required
+        """Subclasses must implement specific business logic."""
         raise NotImplementedError
 
     def get_redirect(self, request):
+        """Return a redirect to `next` or the dashboard."""
         next_url = request.POST.get('next') or request.GET.get('next')
         return redirect(next_url or 'home')
 
     def hx_response(self, request, counter=None):
+        """Return HTMX fragments for dashboard or history contexts."""
         # Если это действия со страницы истории (есть флаг history и counter передан)
         if (request.POST.get('history') or request.GET.get('history')) and counter:
             qs = TimeInterval.objects.filter(counter=counter).order_by('-day', '-date_create')
@@ -493,7 +547,9 @@ class CounterBaseActionView(LoginRequiredMixin, View):
 
 
 class CounterStartView(CounterBaseActionView):
+    """Start (or resume) timer for the selected counter."""
     def handle(self, request, counter):
+        """Validate exclusivity and create a new active interval."""
         active_interval = TimeInterval.objects.filter(counter__user=request.user, end_time__isnull=True).exclude(counter=counter).first()
         if active_interval:
             messages.warning(request, 'Невозможно делать два дела одновременно. Завершите текущий счетчик.')
@@ -522,9 +578,11 @@ class CounterStartView(CounterBaseActionView):
 
 
 class CounterPauseView(CounterBaseActionView):
+    """Pause a running counter without closing the day summary."""
     action_message = 'Счетчик поставлен на паузу.'
 
     def handle(self, request, counter):
+        """Finalize the current interval but keep session marked as paused."""
         interval = counter.intervals.filter(end_time__isnull=True).order_by('-date_create').first()
         if not interval:
             messages.info(request, 'Нет активного интервала для паузы.')
@@ -546,7 +604,9 @@ class CounterPauseView(CounterBaseActionView):
 
 
 class CounterStopView(CounterBaseActionView):
+    """Stop the currently running interval and clear paused state."""
     def handle(self, request, counter):
+        """Close the open interval and refresh day summaries."""
         interval = counter.intervals.filter(end_time__isnull=True).order_by('-date_create').first()
         if not interval:
             messages.info(request, 'Нет активного интервала для остановки.')
@@ -568,6 +628,7 @@ class CounterStopView(CounterBaseActionView):
 
 
 class CounterSummaryView(LoginRequiredMixin, TemplateView):
+    """Aggregated summary across periods (week/month/custom)."""
     template_name = 'time_tracking_main/counter_summary.html'
 
     PERIODS = {
@@ -577,6 +638,7 @@ class CounterSummaryView(LoginRequiredMixin, TemplateView):
     }
 
     def get_period_range(self):
+        """Resolve selected period into a concrete (start, end) tuple."""
         period = self.request.GET.get('period', 'week')
         today = timezone.localdate()
         if period == 'month':
@@ -600,6 +662,7 @@ class CounterSummaryView(LoginRequiredMixin, TemplateView):
         return period, start, today
 
     def get_context_data(self, **kwargs):
+        """Populate template context with per-counter/day aggregates."""
         context = super().get_context_data(**kwargs)
         period, start, end = self.get_period_range()
         intervals = TimeInterval.objects.filter(
@@ -631,9 +694,10 @@ class CounterSummaryView(LoginRequiredMixin, TemplateView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DeleteIntervalViewHTMX(CounterIntervalDeleteView):
-    """Совместимость с существующим HTMX маршрутом."""
+    """HTMX-friendly delete endpoint returning empty 204 response."""
 
     def post(self, request, pk):
+        """Delete an interval and respond with 204 for HTMX."""
         return self._handle_delete(request, pk)
 
     # HTMX hx-delete шлёт DELETE; раньше обрабатывался только POST.
@@ -696,9 +760,11 @@ class DeleteIntervalViewHTMX(CounterIntervalDeleteView):
 
 
 class IntervalDetailView(LoginRequiredMixin, DetailView):
+    """Basic detail view for an interval (used for debugging/admin)."""
     model = TimeInterval
     template_name = 'time_tracking_main/interval_detail.html'
     context_object_name = 'interval'
 
     def get_queryset(self):
+        """Restrict detail view to intervals of the requesting user."""
         return TimeInterval.objects.filter(counter__user=self.request.user)

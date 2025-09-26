@@ -24,7 +24,7 @@
         </button>
         <button type="button"
                 class="btn btn-outline-secondary btn-sm"
-                hx-get="{% url 'interval_update' interval.id %}?mode=display"
+                hx-get="{% url 'interval_update' interval.id %}?mode=display{% if number %}&num={{ number }}{% endif %}{% if filter_start %}&start={{ filter_start|date:'Y-m-d' }}{% endif %}{% if filter_end %}&end={{ filter_end|date:'Y-m-d' }}{% endif %}"
                 hx-target="#interval-{{ interval.id }}"
                 hx-swap="outerHTML">
             Отмена

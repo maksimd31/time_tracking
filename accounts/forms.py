@@ -1,3 +1,5 @@
+"""Form definitions for authentication and profile management."""
+
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, PasswordResetForm
 
 from services.utils import FormStyleMixin, PlaceholderAndStyleMixin, RememberMeMixin
@@ -27,6 +29,7 @@ from django import forms
 
 
 class LoginForm(AuthenticationForm):
+    """Deprecated login form retained for backwards compatibility."""
     username = forms.CharField(
         max_length=100,
         label="",
@@ -70,9 +73,7 @@ class LoginForm(AuthenticationForm):
 
 
 class UserUpdateForm(forms.ModelForm):
-    """
-    Форма обновления данных пользователя
-    """
+    """Update username/email fields while enforcing uniqueness."""
     username = forms.CharField(max_length=100,
                                label="Логин",
                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Логин'}),
@@ -84,9 +85,7 @@ class UserUpdateForm(forms.ModelForm):
         fields = ('username', 'email',)
 
     def clean_email(self):
-        """
-        Проверка email на уникальность
-        """
+        """Ensure email remains unique across users when updating."""
         email = self.cleaned_data.get('email')
         if email and User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError('Email адрес должен быть уникальным')
@@ -94,9 +93,7 @@ class UserUpdateForm(forms.ModelForm):
 
 
 class ProfileUpdateForm(forms.ModelForm):
-    """
-    Форма обновления данных профиля пользователя
-    """
+    """Edit avatar and short bio for the user's profile."""
     avatar = forms.ImageField(
         required=False,
         label="Фотография",
@@ -119,18 +116,14 @@ class ProfileUpdateForm(forms.ModelForm):
         fields = ('avatar', 'bio')
 
 
-class UserRegisterForm(PlaceholderAndStyleMixin,FormStyleMixin, UserCreationForm):
-    """
-    Переопределенная форма регистрации пользователей
-    """
+class UserRegisterForm(PlaceholderAndStyleMixin, FormStyleMixin, UserCreationForm):
+    """Collect credentials and email for new registrations."""
 
     class Meta(UserCreationForm.Meta):
         fields = ('username', 'password1', 'password2', 'email')
 
     def clean_email(self):
-        """
-        Проверка email на уникальность
-        """
+        """Validate email uniqueness among registered users."""
         email = self.cleaned_data.get('email')
         if email and User.objects.filter(email=email).exists():
             raise forms.ValidationError('Такой email уже используется в системе')
@@ -144,10 +137,8 @@ class UserRegisterForm(PlaceholderAndStyleMixin,FormStyleMixin, UserCreationForm
     }
 
 
-class UserLoginForm(RememberMeMixin,PlaceholderAndStyleMixin, FormStyleMixin, AuthenticationForm):
-    """
-    Форма авторизации на сайте
-    """
+class UserLoginForm(RememberMeMixin, PlaceholderAndStyleMixin, FormStyleMixin, AuthenticationForm):
+    """Styled login form that adds a remember-me checkbox."""
 
     placeholders = {
         'username': 'Логин',
@@ -158,9 +149,7 @@ class UserLoginForm(RememberMeMixin,PlaceholderAndStyleMixin, FormStyleMixin, Au
 
 
 class CustomPasswordChangeForm(PlaceholderAndStyleMixin, FormStyleMixin, PasswordChangeForm):
-    """
-    Форма и обновление стилей формы авторизации
-    """
+    """Password-change form with consistent styling placeholders."""
     placeholders = {
         'old_password': 'Старый пароль',
         'new_password1': 'Новый пароль',
@@ -169,6 +158,7 @@ class CustomPasswordChangeForm(PlaceholderAndStyleMixin, FormStyleMixin, Passwor
 
 
 class CustomPasswordResetForm(PlaceholderAndStyleMixin, FormStyleMixin, PasswordResetForm):
+    """Password reset form mirroring project-wide styling helpers."""
 
     placeholders = {
         'email' : 'Введите адрес своей почты'

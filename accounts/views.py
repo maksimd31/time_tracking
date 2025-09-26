@@ -1,3 +1,5 @@
+"""Views handling authentication flow, profile management, and VKID hook."""
+
 import os
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -27,35 +29,34 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 class ChangePasswordView(LoginRequiredMixin, SuccessMessageMixin, PasswordChangeView):
-    """
-    Представление для смены пароля
-    """
+    """Allow an authenticated user to change their password."""
     form_class = CustomPasswordChangeForm
     template_name = 'accounts/change_password.html'
     success_message = "!"
 
     def get_success_url(self):
+        """Send the user back to their profile after password change."""
         return reverse_lazy('profile_detail', kwargs={'slug': self.request.user.profile.slug})
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
-    """
-    Представление для просмотра профиля
-    """
+    """Display profile information and inline update forms."""
     model = Profile
     context_object_name = 'profile'
     template_name = 'accounts/profile_detail.html'
 
     def get_context_data(self, **kwargs):
+        """Supply profile object plus bound forms for the owner."""
         context = super().get_context_data(**kwargs)
         context['title'] = f'Профиль пользователя: {self.object.user.username}'
-        context['user'] = self.object.user  # Добавляем user в контекст
+        context['user'] = self.object.user
         if self.request.user == self.object.user:
             context.setdefault('user_form', UserUpdateForm(instance=self.object.user))
             context.setdefault('profile_form', ProfileUpdateForm(instance=self.object))
         return context
 
     def post(self, request, *args, **kwargs):
+        """Process inline profile updates coming from HTMX or full POST."""
         self.object = self.get_object()
         if request.user != self.object.user:
             messages.error(request, 'Вы не можете изменять профиль другого пользователя.')
@@ -78,18 +79,18 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
 
 
 class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    """
-    Представление для редактирования профиля
-    """
+    """Legacy endpoint that proxies to inline profile editing."""
     model = Profile
     form_class = ProfileUpdateForm
     template_name = 'accounts/profile_edit.html'
     success_message = 'Запись была успешно обновлена!'
 
     def get_object(self, queryset=None):
+        """Return the profile owned by the current request user."""
         return self.request.user.profile
 
     def get_context_data(self, **kwargs):
+        """Attach both profile and user forms to the context."""
         context = super().get_context_data(**kwargs)
         context['title'] = f'Редактирование профиля пользователя: {self.request.user.username}'
         if self.request.POST:
@@ -99,6 +100,7 @@ class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        """Validate both forms inside a transaction before saving."""
         context = self.get_context_data()
         user_form = context['user_form']
         with transaction.atomic():
@@ -111,24 +113,25 @@ class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        """Return to the detailed profile page on success."""
         return reverse_lazy('profile_detail', kwargs={'slug': self.object.slug})
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
-    """
-    Представление регистрации с формой регистрации
-    """
+    """Create a new user account and immediately log them in."""
     form_class = UserRegisterForm
     success_url = reverse_lazy('home')
     template_name = 'accounts/user_register.html'
     success_message = 'Вы успешно зарегистрировались. Можете войти на сайт!'
 
     def get_context_data(self, **kwargs):
+        """Attach page title for template consumption."""
         context = super().get_context_data(**kwargs)
         context['title'] = 'Регистрация на сайте'
         return context
 
     def form_valid(self, form):
+        """Persist the user and authenticate them via default backend."""
         response = super().form_valid(form)
         user = self.object
         backend = 'django.contrib.auth.backends.ModelBackend'
@@ -137,18 +140,14 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
 
 
 class UserLoginView(SuccessMessageMixin, LoginView):
-    """
-    Авторизация
-    """
+    """Authenticate existing users with optional remember-me."""
     form_class = UserLoginForm
     template_name = 'accounts/user_login.html'
     next_page = 'home'
     success_message = 'Добро пожаловать!'
 
     def form_valid(self, form):
-        """
-        Если форма валидна, обработать 'remember_me' и выполнить вход.
-        """
+        """Adjust session expiry according to the remember-me checkbox."""
         response = super().form_valid(form)
         remember_me = form.cleaned_data.get('remember_me')
         if not remember_me:
@@ -158,18 +157,14 @@ class UserLoginView(SuccessMessageMixin, LoginView):
         return response
 
     def get_context_data(self, **kwargs):
-        """
-        Передача дополнительных данных в контекст.
-        """
+        """Attach page title for templates."""
         context = super().get_context_data(**kwargs)
         context['title'] = 'Вход на сайт'
         return context
 
 
 class UserLogoutView(LogoutView):
-    """
-    Выход с сайта
-    """
+    """Log out the current user and redirect to the dashboard."""
     next_page = 'home'
 
 
@@ -182,6 +177,7 @@ import json
 # Отключаем проверку CSRF для этого view (для тестирования, в продакшене лучше использовать CSRF!)
 @csrf_exempt
 def vkid_token(request):
+    """Handle VK ID auth callback (test-only helper)."""
     import json  # Импортируем модуль json для работы с JSON-данными
     try:
         # Обработка разных методов запроса

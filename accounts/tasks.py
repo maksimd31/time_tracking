@@ -1,3 +1,5 @@
+"""Celery tasks triggered by account lifecycle events."""
+
 from django.conf import settings
 from django.core.mail import send_mail
 from celery import shared_task
@@ -5,6 +7,7 @@ from celery import shared_task
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def send_welcome_email(self, subject, message, to_email):
+    """Send a welcome email, retrying on transient errors."""
     if not to_email:
         return
     send_mail(

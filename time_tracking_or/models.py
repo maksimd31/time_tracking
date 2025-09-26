@@ -1,3 +1,5 @@
+"""Database models for counters, intervals, and daily summaries."""
+
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
@@ -5,6 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 class TimeCounter(models.Model):
+    """A named timer that groups time intervals for a user."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_counters')
     name = models.CharField(max_length=255, verbose_name='Название')
     slug = models.SlugField(max_length=255, blank=True, verbose_name='URL')
@@ -19,9 +22,11 @@ class TimeCounter(models.Model):
         verbose_name_plural = 'Счетчики'
 
     def __str__(self):
+        """Return human readable representation with owner."""
         return f"{self.name} ({self.user.username})"
 
     def save(self, *args, **kwargs):
+        """Auto-generate slug for new counters and persist changes."""
         if not self.slug:
             from services.utils import unique_slugify
             self.slug = unique_slugify(self, self.name, self.slug)
@@ -29,10 +34,12 @@ class TimeCounter(models.Model):
 
     @property
     def is_running(self):
+        """Return whether the counter currently has an open interval."""
         return self.intervals.filter(end_time__isnull=True).exists()
 
 
 class TimeInterval(models.Model):
+    """Concrete slice of time recorded under a counter."""
     counter = models.ForeignKey(TimeCounter, on_delete=models.CASCADE, related_name='intervals', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_intervals', null=True, blank=True)
     day = models.DateField(default=timezone.localdate, verbose_name='День')
@@ -48,6 +55,7 @@ class TimeInterval(models.Model):
         verbose_name_plural = 'Интервалы'
 
     def save(self, *args, **kwargs):
+        """Normalize ownership data and recalculate duration before saving."""
         if not self.counter_id:
             raise ValueError('Counter must be set for TimeInterval')
         if self.counter_id and self.user_id != self.counter.user_id:
@@ -64,6 +72,7 @@ class TimeInterval(models.Model):
 
 
 class DailySummary(models.Model):
+    """Denormalized daily totals for quick dashboard access."""
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     date = models.DateField()
     interval_count = models.PositiveIntegerField(default=0, verbose_name='Количество интервалов')
@@ -77,4 +86,5 @@ class DailySummary(models.Model):
         verbose_name_plural = 'Суточные итоги'
 
     def __str__(self):
+        """Display the day and username for admin lists."""
         return f"{self.date} - {self.user.username}"

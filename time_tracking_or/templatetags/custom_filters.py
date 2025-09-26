@@ -1,3 +1,5 @@
+"""Custom template filters for formatting durations and helper lookups."""
+
 from datetime import timedelta
 
 from django import template
@@ -10,6 +12,7 @@ register = template.Library()
 
 @register.filter
 def format_time(value):
+    """Return a localized string describing a `datetime.time` value."""
     if value is None:
         return "Время не задано"
 
@@ -22,6 +25,7 @@ def format_time(value):
 
 @register.filter
 def duration_format(duration):
+    """Convert `timedelta` or `HH:MM:SS` string into readable text."""
     if isinstance(duration, str):
         parts = duration.split(':')
         if len(parts) == 3:
@@ -44,6 +48,7 @@ def duration_format(duration):
 
 @register.filter
 def get_summary_interval_count(daily_summaries, selected_date):
+    """Return interval count for the summary matching the selected day."""
     if not hasattr(daily_summaries, 'filter'):  # Проверяем, поддерживает ли объект метод filter
         return "Нет данных"
 
@@ -56,6 +61,7 @@ def get_summary_interval_count(daily_summaries, selected_date):
 
 @register.filter
 def get_summary_total_time(daily_summaries, selected_date):
+    """Return formatted total time for the provided day if present."""
     summary = daily_summaries.filter(date=selected_date).first()
     if summary:
         return duration_format(summary.total_time)
@@ -65,6 +71,7 @@ def get_summary_total_time(daily_summaries, selected_date):
 
 @register.filter
 def ru_date(value, fmt="%d %B %Y"):
+    """Render a Python date/datetime using Russian month names."""
     if not value:
         return ""
     try:
@@ -75,6 +82,7 @@ def ru_date(value, fmt="%d %B %Y"):
 
 @register.filter
 def get_item(mapping, key):
+    """Safe dict lookup that avoids template errors when key missing."""
     if isinstance(mapping, dict):
         return mapping.get(key)
     return None
@@ -82,6 +90,7 @@ def get_item(mapping, key):
 
 @register.filter
 def duration_seconds(duration):
+    """Return duration in whole seconds handling both strings and timedeltas."""
     if isinstance(duration, timedelta):
         return int(duration.total_seconds())
     try:

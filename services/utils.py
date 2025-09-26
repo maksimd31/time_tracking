@@ -1,3 +1,5 @@
+"""Shared utility helpers used across multiple apps."""
+
 from uuid import uuid4
 
 from django import forms
@@ -81,4 +83,3 @@ class RememberMeMixin:
 class DailySummaryMixin(LoginRequiredMixin):
     def get_daily_summaries(self):
         return DailySummary.objects.filter(user=self.request.user).order_by('date')
-

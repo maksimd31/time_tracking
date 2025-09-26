@@ -1,3 +1,5 @@
+"""URL configuration for counter dashboards and interval endpoints."""
+
 from django.urls import path
 
 from .views import (

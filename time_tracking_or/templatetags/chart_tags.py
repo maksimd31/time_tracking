@@ -1,3 +1,5 @@
+"""Helper filters used by chart widgets in dashboard templates."""
+
 from django import template
 
 register = template.Library()
@@ -5,6 +7,7 @@ register = template.Library()
 
 @register.filter
 def index(sequence, position):
+    """Return item at index `position` or `None` if out of range."""
     try:
         return sequence[position]
     except (IndexError, TypeError):
@@ -13,6 +16,7 @@ def index(sequence, position):
 
 @register.filter
 def percent_of(value, max_value):
+    """Compute percent of max value guarding against zero division."""
     try:
         value = float(value)
         max_value = float(max_value)
@@ -26,6 +30,7 @@ def percent_of(value, max_value):
 
 @register.filter
 def percent_of_total(value, total):
+    """Compute percent of total value, returning zero on invalid input."""
     try:
         value = float(value)
         total = float(total)

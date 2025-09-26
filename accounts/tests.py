@@ -1,13 +1,19 @@
+"""Tests covering custom authentication behaviours."""
+
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 class UserLoginRememberMeTest(TestCase):
+    """Verify remember-me checkbox influences session expiry."""
+
     def setUp(self):
+        """Prepare a user and login URL for tests."""
         self.user = get_user_model().objects.create_user(username='testuser', password='testpass123')
         self.login_url = reverse('login')
 
     def test_login_without_remember_me(self):
+        """Sessions should expire within a day when checkbox unchecked."""
         response = self.client.post(self.login_url, {
             'username': 'testuser',
             'password': 'testpass123',
@@ -18,6 +24,7 @@ class UserLoginRememberMeTest(TestCase):
         self.assertLessEqual(session_expiry, 60 * 60 * 24)  # сессия не более суток (обычно 0 — до закрытия браузера)
 
     def test_login_with_remember_me(self):
+        """Sessions should persist ~2 weeks when checkbox selected."""
         response = self.client.post(self.login_url, {
             'username': 'testuser',
             'password': 'testpass123',
@@ -29,7 +36,10 @@ class UserLoginRememberMeTest(TestCase):
 
 
 class UserRegistrationAutoLoginTest(TestCase):
+    """Confirm that new registrants are automatically authenticated."""
+
     def test_user_is_logged_in_after_registration(self):
+        """Registration response should create session for new user."""
         register_url = reverse('register')
         response = self.client.post(register_url, {
             'username': 'newuser',
