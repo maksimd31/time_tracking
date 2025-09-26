@@ -256,6 +256,12 @@ class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
             if mode == 'display':
                 template = 'time_tracking_main/partials/history_interval_row.html'
             context['interval'] = self.object
+            number = (
+                self.request.GET.get('num')
+                or self.request.POST.get('num')
+            )
+            if number:
+                context['number'] = number
             return render(
                 self.request,
                 template,
@@ -271,12 +277,64 @@ class CounterIntervalUpdateView(LoginRequiredMixin, UpdateView):
         if original_day != self.object.day:
             recalculate_daily_summary(self.request.user, original_day)
         if self.request.headers.get('HX-Request'):
-            html = render_to_string(
+            number = self.request.POST.get('num')
+            start = self.request.POST.get('start')
+            end = self.request.POST.get('end')
+
+            # Пересчет агрегатов с учетом фильтров
+            qs = TimeInterval.objects.filter(counter_id=self.object.counter_id)
+            if start:
+                try:
+                    sd = timezone.datetime.strptime(start, '%Y-%m-%d').date()
+                    qs = qs.filter(day__gte=sd)
+                except ValueError:
+                    pass
+            if end:
+                try:
+                    ed = timezone.datetime.strptime(end, '%Y-%m-%d').date()
+                    qs = qs.filter(day__lte=ed)
+                except ValueError:
+                    pass
+            finished = qs.filter(end_time__isnull=False)
+            aggregate = finished.aggregate(total=Sum('duration'), count=Count('id'))
+            stats_ctx = {
+                'interval_count': aggregate.get('count') or 0,
+                'total_duration': aggregate.get('total') or timedelta(),
+            }
+
+            # Рендер строки
+            row_ctx = {'interval': self.object}
+            if number:
+                row_ctx['number'] = number
+            if start:
+                # Нужно передать фильтры обратно для будущих действий
+                try:
+                    row_ctx['filter_start'] = timezone.datetime.strptime(start, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            if end:
+                try:
+                    row_ctx['filter_end'] = timezone.datetime.strptime(end, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            row_html = render_to_string(
                 'time_tracking_main/partials/history_interval_row.html',
-                {'interval': self.object},
-                request=self.request
+                row_ctx,
+                request=self.request,
             )
-            return HttpResponse(html)
+            stats_html_inner = render_to_string(
+                'time_tracking_main/partials/history_stats.html',
+                stats_ctx,
+                request=self.request,
+            )
+            # Возвращаем строку + OOB обновление статистики
+            full_html = (
+                row_html
+                + "<div id='history-stats' hx-swap-oob='true'>"
+                + stats_html_inner
+                + "</div>"
+            )
+            return HttpResponse(full_html)
         return response
 
     def form_invalid(self, form):
@@ -347,7 +405,85 @@ class CounterBaseActionView(LoginRequiredMixin, View):
         next_url = request.POST.get('next') or request.GET.get('next')
         return redirect(next_url or 'home')
 
-    def hx_response(self, request):
+    def hx_response(self, request, counter=None):
+        # Если это действия со страницы истории (есть флаг history и counter передан)
+        if (request.POST.get('history') or request.GET.get('history')) and counter:
+            qs = TimeInterval.objects.filter(counter=counter).order_by('-day', '-date_create')
+            from django.core.paginator import Paginator
+            paginator = Paginator(qs, 10)
+            page_number = 1
+            try:
+                if request.POST.get('page'):
+                    page_number = int(request.POST.get('page'))
+            except ValueError:
+                page_number = 1
+            page_obj = paginator.get_page(page_number)
+            finished = qs.filter(end_time__isnull=False)
+            aggregate = finished.aggregate(total=Sum('duration'), count=Count('id'))
+            active_interval = qs.filter(end_time__isnull=True).first()
+            active_total = 0
+            if active_interval and active_interval.start_time:
+                day_total = qs.filter(day=active_interval.day, end_time__isnull=False).aggregate(
+                    total=Sum('duration')
+                )['total'] or timedelta()
+                active_total = int(day_total.total_seconds())
+            ctx = {
+                'counter': counter,
+                'intervals': page_obj.object_list,
+                'page_obj': page_obj,
+                'paginator': paginator,
+                'is_paginated': page_obj.has_other_pages(),
+                'interval_count': aggregate.get('count') or 0,
+                'total_duration': aggregate.get('total') or timedelta(),
+                'active_interval': active_interval,
+                'active_total': active_total,
+            }
+            controls_html = render_to_string(
+                'time_tracking_main/partials/history_counter_controls.html',
+                ctx,
+                request=request,
+            )
+            stats_html = render_to_string(
+                'time_tracking_main/partials/history_stats.html',
+                ctx,
+                request=request,
+            )
+            # Формируем полный контейнер таблицы, чтобы избежать проблем с заменой <tbody> (дублирование в некоторых браузерах)
+            start_index = page_obj.start_index()
+            rows_html = []
+            for offset, interval in enumerate(page_obj.object_list):
+                rows_html.append(
+                    render_to_string(
+                        'time_tracking_main/partials/history_interval_row.html',
+                        {
+                            'interval': interval,
+                            'number': start_index + offset,  # начинается с 1
+                        },
+                        request=request,
+                    )
+                )
+            table_container = (
+                "<div id='history-intervals' hx-swap-oob='true'>"
+                "<table class='table table-modern align-middle history-table'>"
+                "<thead><tr>"
+                "<th scope='col' style='width:72px;'>№</th>"
+                "<th scope='col'>Дата</th>"
+                "<th scope='col'>Старт</th>"
+                "<th scope='col'>Стоп</th>"
+                "<th scope='col'>Длительность</th>"
+                "<th scope='col' class='text-end'>Действия</th>"
+                "</tr></thead>"
+                "<tbody id='history-intervals-body'>"
+                + ''.join(rows_html)
+                + "</tbody></table>"
+                "</div>"
+            )
+            stats_oob = (
+                "<div id='history-stats' hx-swap-oob='true'>" + stats_html + "</div>"
+            )
+            return HttpResponse(controls_html + stats_oob + table_container)
+
+        # Иначе возвращаем дашборд (главная панель)
         view = TimeCounterListView()
         view.request = request
         view.kwargs = {}
@@ -362,12 +498,12 @@ class CounterStartView(CounterBaseActionView):
         if active_interval:
             messages.warning(request, 'Невозможно делать два дела одновременно. Завершите текущий счетчик.')
             if request.headers.get('HX-Request'):
-                return self.hx_response(request)
+                return self.hx_response(request, counter=counter)
             return self.get_redirect(request)
         if counter.is_running:
             messages.info(request, 'Счетчик уже запущен.')
             if request.headers.get('HX-Request'):
-                return self.hx_response(request)
+                return self.hx_response(request, counter=counter)
             return self.get_redirect(request)
         local_time = timezone.localtime()
         TimeInterval.objects.create(
@@ -381,7 +517,7 @@ class CounterStartView(CounterBaseActionView):
             paused.remove(counter.id)
             request.session['paused_counters'] = paused
         if request.headers.get('HX-Request'):
-            return self.hx_response(request)
+            return self.hx_response(request, counter=counter)
         return self.get_redirect(request)
 
 
@@ -393,7 +529,7 @@ class CounterPauseView(CounterBaseActionView):
         if not interval:
             messages.info(request, 'Нет активного интервала для паузы.')
             if request.headers.get('HX-Request'):
-                return self.hx_response(request)
+                return self.hx_response(request, counter=counter)
             return self.get_redirect(request)
         local_time = timezone.localtime()
         interval.end_time = local_time.time()
@@ -405,7 +541,7 @@ class CounterPauseView(CounterBaseActionView):
             paused.append(counter.id)
             request.session['paused_counters'] = paused
         if request.headers.get('HX-Request'):
-            return self.hx_response(request)
+            return self.hx_response(request, counter=counter)
         return self.get_redirect(request)
 
 
@@ -415,7 +551,7 @@ class CounterStopView(CounterBaseActionView):
         if not interval:
             messages.info(request, 'Нет активного интервала для остановки.')
             if request.headers.get('HX-Request'):
-                return self.hx_response(request)
+                return self.hx_response(request, counter=counter)
             return self.get_redirect(request)
         local_time = timezone.localtime()
         interval.end_time = local_time.time()
@@ -427,7 +563,7 @@ class CounterStopView(CounterBaseActionView):
             paused.remove(counter.id)
             request.session['paused_counters'] = paused
         if request.headers.get('HX-Request'):
-            return self.hx_response(request)
+            return self.hx_response(request, counter=counter)
         return self.get_redirect(request)
 
 
@@ -498,13 +634,63 @@ class DeleteIntervalViewHTMX(CounterIntervalDeleteView):
     """Совместимость с существующим HTMX маршрутом."""
 
     def post(self, request, pk):
-        interval = get_object_or_404(TimeInterval, pk=pk, counter__user=request.user)
+        return self._handle_delete(request, pk)
+
+    # HTMX hx-delete шлёт DELETE; раньше обрабатывался только POST.
+    def delete(self, request, pk):  # type: ignore[override]
+        return self._handle_delete(request, pk)
+
+    def _handle_delete(self, request, pk):
+        interval = get_object_or_404(
+            TimeInterval,
+            pk=pk,
+            counter__user=request.user,
+        )
         counter_id = interval.counter_id
         day = interval.day
         interval.delete()
         recalculate_daily_summary(request.user, day)
+        # Подсчёт обновленной статистики (учёт фильтров даты)
+        start = request.POST.get('start') or request.GET.get('start')
+        end = request.POST.get('end') or request.GET.get('end')
+
+        def parse_date(value):  # локальный парсер без повторного импорта
+            if not value:
+                return None
+            try:
+                return timezone.datetime.strptime(value, '%Y-%m-%d').date()
+            except ValueError:
+                return None
+
+        start_d = parse_date(start)
+        end_d = parse_date(end)
+
+        qs = TimeInterval.objects.filter(counter_id=counter_id)
+        if start_d:
+            qs = qs.filter(day__gte=start_d)
+        if end_d:
+            qs = qs.filter(day__lte=end_d)
+        finished = qs.filter(end_time__isnull=False)
+        aggregate = finished.aggregate(
+            total=Sum('duration'),
+            count=Count('id'),
+        )
+        ctx = {
+            'interval_count': aggregate.get('count') or 0,
+            'total_duration': aggregate.get('total') or timedelta(),
+        }
         if request.headers.get('HX-Request'):
-            return HttpResponse(status=204)
+            stats_inner = render_to_string(
+                'time_tracking_main/partials/history_stats.html',
+                ctx,
+                request=request,
+            )
+            # OOB обновление статистики + удаление строки
+            html = (
+                "<!--deleted--><div id='history-stats' "
+                "hx-swap-oob='true'>" + stats_inner + "</div>"
+            )
+            return HttpResponse(html)
         messages.success(request, 'Интервал удален.')
         return redirect('counter_history', pk=counter_id)
 

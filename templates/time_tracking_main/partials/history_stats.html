@@ -1,0 +1,13 @@
+{% load custom_filters %}
+<div class="card mb-4">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+            <span class="text-muted-soft">Всего интервалов</span>
+            <p class="fs-4 fw-semibold mb-0">{{ interval_count }}</p>
+        </div>
+        <div>
+            <span class="text-muted-soft">Суммарное время</span>
+            <p class="fs-4 fw-semibold mb-0">{{ total_duration|duration_format }}</p>
+        </div>
+    </div>
+</div>
