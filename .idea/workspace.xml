@@ -4,30 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="add timer js vrema">
-      <change afterPath="$PROJECT_DIR$/.coveragerc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DEPLOY_FULL_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DEPLOY_MINIMAL_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README_DEPLOY.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Time_tracking/gunicorn_config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Time_tracking/settings_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/conftest.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pytest.ini" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements_2025-09-26_old.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_accounts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_additional_coverage.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_more_views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_template_tags.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_time_tracking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Time_tracking/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Time_tracking/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/accounts/user_login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/user_login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/time_tracking_or/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/time_tracking_or/models.py" afterDir="false" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="feat: Add test settings and coverage configuration for improved testing environment">
+      <change afterPath="$PROJECT_DIR$/Time_tracking/settings_prod.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -275,7 +253,7 @@
       <workItem from="1758988613915" duration="1678000" />
       <workItem from="1759052817855" duration="3608000" />
       <workItem from="1759139339531" duration="3000" />
-      <workItem from="1759139357654" duration="3694000" />
+      <workItem from="1759139357654" duration="4309000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -533,7 +511,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750597230924</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="feat: Add test settings and coverage configuration for improved testing environment">
+      <option name="closed" value="true" />
+      <created>1759143077775</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1759143077775</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -583,7 +569,8 @@
     <MESSAGE value="bug fix UserLoginView -&gt; fix remember_me" />
     <MESSAGE value="update README.md" />
     <MESSAGE value="add timer js vrema" />
-    <option name="LAST_COMMIT_MESSAGE" value="add timer js vrema" />
+    <MESSAGE value="feat: Add test settings and coverage configuration for improved testing environment" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: Add test settings and coverage configuration for improved testing environment" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
