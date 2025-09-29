@@ -1,0 +1,31 @@
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "B"]
+ignore = [
+  # E501 line length handled by formatter; leave long lines if needed
+  "E501",
+]
+exclude = [
+  ".venv",
+  "migrations",
+  "__pycache__",
+]
+show-fixes = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["accounts", "time_tracking_or", "services", "Time_tracking"]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Optional mypy config stub (uncomment if you add mypy)
+# [tool.mypy]
+# plugins = ["mypy_django_plugin.main"]
+# django_settings_module = "Time_tracking.settings"
+# strict_optional = true
+# disallow_untyped_defs = true
+# ignore_missing_imports = true
