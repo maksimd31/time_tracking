@@ -1,6 +1,7 @@
 """Views handling authentication flow, profile management, and VKID hook."""
 
 import os
+import logging
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
@@ -24,6 +25,8 @@ from dotenv import load_dotenv
 from django.contrib import messages
 
 load_dotenv()
+
+logger = logging.getLogger('vk_auth')
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -157,9 +160,14 @@ class UserLoginView(SuccessMessageMixin, LoginView):
         return response
 
     def get_context_data(self, **kwargs):
-        """Attach page title for templates."""
+        """Attach page title for templates and VKID widget config."""
         context = super().get_context_data(**kwargs)
         context['title'] = 'Вход на сайт'
+        from django.conf import settings
+        context['vkid_app_id'] = getattr(settings, 'VKID_APP_ID', None)
+        context['vkid_redirect_url'] = getattr(settings, 'VKID_REDIRECT_URL', None)
+        context['vkid_scope'] = getattr(settings, 'VKID_SCOPE', '')
+        context['vkid_frontend_exchange'] = os.getenv('VKID_FRONTEND_EXCHANGE', 'False') == 'True'
         return context
 
 
@@ -177,99 +185,166 @@ import json
 # Отключаем проверку CSRF для этого view (для тестирования, в продакшене лучше использовать CSRF!)
 @csrf_exempt
 def vkid_token(request):
-    """Handle VK ID auth callback (test-only helper)."""
-    import json  # Импортируем модуль json для работы с JSON-данными
+    """Handle VK ID auth callback (test-only helper).
+
+    Теперь поддерживает два варианта:
+    1) Backend exchange: приходит code + device_id (+ optional code_verifier) – сервер сам меняет код на access_token.
+    2) Frontend exchange: приходит access_token прямо с фронта (VKID.Auth.exchangeCode) – сервер только получает user_info.
+
+    Дополнительно: сохраняем имя, email и аватар пользователя (если доступны).
+    """
+    import json
+    from django.core.files.base import ContentFile
+    from django.db import transaction
+
+    def _apply_user_info(user, user_info: dict):
+        """Обновить first_name/last_name/email на основе user_info без агрессивного перезаписи.
+        Поддерживаем ключи: name, first_name, last_name, email, given_name, family_name, picture/avatar/photo.
+        """
+        changed = False
+        # Имя
+        first_name = user_info.get('first_name') or user_info.get('given_name')
+        last_name = user_info.get('last_name') or user_info.get('family_name')
+        # Если есть единое поле name и нет отдельных
+        if not (first_name or last_name) and user_info.get('name'):
+            full = user_info.get('name').strip()
+            parts = full.split(' ', 1)
+            first_name = parts[0]
+            if len(parts) > 1:
+                last_name = parts[1]
+        if first_name and not user.first_name:
+            user.first_name = first_name[:150]
+            changed = True
+        if last_name and not user.last_name:
+            user.last_name = last_name[:150]
+            changed = True
+        # Email — только если у пользователя ещё пусто
+        email = user_info.get('email')
+        if email and not user.email:
+            user.email = email[:254]
+            changed = True
+        if changed:
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+
+        # Профиль (создаём если сигналы отключены/не сработали)
+        from .models import Profile
+        profile, _ = Profile.objects.get_or_create(user=user)
+
+        # Аватар: ищем поле picture/photo/avatar с URL
+        avatar_url = (
+            user_info.get('picture') or user_info.get('photo') or user_info.get('avatar') or user_info.get('photo_200')
+        )
+        # Скачиваем только если у профиля дефолт и есть валидный http(s) URL
+        if avatar_url and isinstance(avatar_url, str) and avatar_url.startswith('http'):
+            # Не перекачиваем, если уже не default
+            if profile.avatar and 'default' not in str(profile.avatar.name):
+                return
+            try:
+                r = requests.get(avatar_url, timeout=5)
+                ct = r.headers.get('Content-Type', '') if hasattr(r, 'headers') else ''
+                if r.status_code == 200 and r.content and ('image/' in ct or avatar_url.lower().endswith(('.jpg', '.jpeg', '.png'))):
+                    ext = '.jpg'
+                    for cand in ('.png', '.jpeg', '.jpg'):
+                        if avatar_url.lower().endswith(cand):
+                            ext = cand
+                            break
+                    profile.avatar.save(f'vkid_{user.pk}{ext}', ContentFile(r.content), save=True)
+            except Exception as e:
+                # Лог — не падаем из-за аватара
+                logger.warning('VKID AVATAR DOWNLOAD ERROR: %s', e)
+
     try:
-        # Обработка разных методов запроса
         if request.method == 'GET':
-            # Получаем параметры из строки запроса (GET)
             code = request.GET.get('code')
             device_id = request.GET.get('device_id')
             code_verifier = request.GET.get('code_verifier')
+            access_token_front = request.GET.get('access_token')
         elif request.method == 'POST':
-            # Получаем параметры из тела запроса (POST, JSON)
-            data = json.loads(request.body.decode())
+            data = json.loads(request.body.decode() or '{}')
             code = data.get('code')
             device_id = data.get('device_id')
             code_verifier = data.get('code_verifier')
+            access_token_front = data.get('access_token')
         else:
-            # Если метод не GET и не POST — возвращаем ошибку
             return JsonResponse({'success': False, 'message': 'Only GET and POST allowed'}, status=405)
 
-        # Логируем полученные параметры для отладки
-        print('VKID CALLBACK PARAMS:', {'code': code, 'device_id': device_id, 'code_verifier': code_verifier})
-        # Проверяем, что обязательные параметры присутствуют
+        logger.info('VKID CALLBACK PARAMS: code=%s device_id=%s code_verifier=%s frontend_token=%s', code, device_id, bool(code_verifier), bool(access_token_front))
+
+        # Вариант 2: уже есть access_token – пропускаем обмен
+        if access_token_front:
+            user_info_resp = requests.get(
+                'https://id.vk.com/oauth2/user_info',
+                headers={'Authorization': f'Bearer {access_token_front}'}
+            )
+            try:
+                user_info = user_info_resp.json()
+            except Exception:
+                logger.error('VKID user info parse error (frontend). Raw=%s', user_info_resp.text)
+                return JsonResponse({'success': False, 'message': 'VKID user info error', 'raw': user_info_resp.text}, status=500)
+            vk_user_id = user_info.get('sub')
+            if not vk_user_id:
+                return JsonResponse({'success': False, 'message': 'No VK user id'}, status=400)
+            UserModel = get_user_model()
+            with transaction.atomic():
+                user, _ = UserModel.objects.get_or_create(username=f'vkid_{vk_user_id}')
+                _apply_user_info(user, user_info)
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return JsonResponse({'success': True, 'user_info': user_info, 'mode': 'frontend'})
+
+        # Вариант 1 (как раньше): нужен code + device_id
         if not code or not device_id:
             return JsonResponse({'success': False, 'message': 'No code or device_id provided'}, status=400)
 
-        # Получаем client_id и redirect_uri из переменных окружения или настроек Django
         client_id = os.getenv('SOCIAL_AUTH_VK_OAUTH2_KEY') or getattr(settings, 'SOCIAL_AUTH_VK_OAUTH2_KEY', None)
         redirect_uri = os.getenv('SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI') or getattr(settings, 'SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI', None)
 
-        # Формируем payload для запроса токена VK ID
         payload = {
-            'grant_type': 'authorization_code',  # Тип grant-а — авторизационный код
-            'code': code,                        # Код авторизации
-            'device_id': device_id,              # Идентификатор устройства
-            'client_id': client_id,              # ID приложения VK
-            'redirect_uri': redirect_uri,        # Redirect URI, который был указан при авторизации
+            'grant_type': 'authorization_code',
+            'code': code,
+            'device_id': device_id,
+            'client_id': client_id,
+            'redirect_uri': redirect_uri,
         }
-        # Если есть code_verifier (PKCE), добавляем его
         if code_verifier:
             payload['code_verifier'] = code_verifier
-        # Заголовки для запроса (тип контента — form-urlencoded)
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        # URL для получения access_token VK ID
         token_url = 'https://id.vk.com/oauth2/token'
 
         try:
-            # Делаем POST-запрос к VK ID для обмена кода на access_token
             resp = requests.post(token_url, data=payload, headers=headers)
             try:
-                # Пробуем распарсить ответ как JSON
                 resp_json = resp.json()
             except Exception:
-                # Если не удалось — выводим сырой ответ и возвращаем ошибку
-                print('VKID TOKEN RAW RESPONSE:', resp.text)
+                logger.error('VKID token exchange raw response parse error. Raw=%s', resp.text)
                 return JsonResponse({'success': False, 'message': 'VKID token exchange error', 'raw': resp.text, 'status_code': resp.status_code}, status=500)
 
-            # Если запрос успешен и есть access_token
             if resp.status_code == 200 and 'access_token' in resp_json:
                 access_token = resp_json['access_token']
-                # Получаем информацию о пользователе через VK ID API
                 user_info_resp = requests.get(
                     'https://id.vk.com/oauth2/user_info',
                     headers={'Authorization': f'Bearer {access_token}'}
                 )
                 try:
-                    # Пробуем распарсить ответ как JSON
                     user_info = user_info_resp.json()
                 except Exception:
-                    # Если не удалось — выводим сырой ответ и возвращаем ошибку
-                    print('VKID USER INFO RAW RESPONSE:', user_info_resp.text)
+                    logger.error('VKID user info parse error (backend). Raw=%s', user_info_resp.text)
                     return JsonResponse({'success': False, 'message': 'VKID user info error', 'raw': user_info_resp.text, 'status_code': user_info_resp.status_code}, status=500)
-                # Получаем VK user id из ответа
                 vk_user_id = user_info.get('sub')
                 if not vk_user_id:
-                    # Если нет user id — ошибка
-                    print('NO VK USER ID:', user_info)
+                    logger.error('NO VK USER ID (backend): %s', user_info)
                     return JsonResponse({'success': False, 'message': 'No VK user id'}, status=400)
-                # Получаем модель пользователя Django
-                User = get_user_model()
-                # Ищем пользователя по username или создаём нового
-                user, created = User.objects.get_or_create(username=f'vkid_{vk_user_id}')
-                # Выполняем вход пользователя в Django
-                login(request, user)
-                # Возвращаем успешный ответ с информацией о пользователе
-                return JsonResponse({'success': True, 'user_info': user_info})
-            # Если не получили access_token — выводим ошибку и возвращаем ответ
-            print('VKID TOKEN RESPONSE ERROR:', resp_json)
+                UserModel = get_user_model()
+                with transaction.atomic():
+                    user, created = UserModel.objects.get_or_create(username=f'vkid_{vk_user_id}')
+                    _apply_user_info(user, user_info)
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                logger.info('VKID backend login success user=%s mode=backend', user.username)
+                return JsonResponse({'success': True, 'user_info': user_info, 'mode': 'backend'})
+            logger.warning('VKID TOKEN RESPONSE ERROR status=%s body=%s', resp.status_code, resp_json)
             return JsonResponse({'success': False, 'message': resp_json}, status=resp.status_code)
         except Exception as e:
-            # Ловим ошибки обмена токена или получения user info
-            print('VKID TOKEN EXCHANGE/USER INFO ERROR:', str(e))
+            logger.exception('VKID token exchange or user info error: %s', e)
             return JsonResponse({'success': False, 'message': f'VKID token exchange or user info error: {str(e)}'}, status=500)
     except Exception as e:
-        # Ловим любые другие ошибки
-        print('VKID_TOKEN GENERAL ERROR:', str(e))
+        logger.exception('VKID_TOKEN GENERAL ERROR: %s', e)
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

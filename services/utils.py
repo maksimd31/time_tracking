@@ -11,14 +11,19 @@ from time_tracking_or.models import DailySummary
 
 def unique_slugify(instance, slug, slug_field):
     """
-    Генератор уникальных SLUG для моделей, в случае существования такого SLUG.
+    Генератор уникальных SLUG для моделей.
+
+    Предыдущее поведение: если slug_field был пустым, возвращался просто slugify(slug)
+    без проверки на коллизию. Это могло приводить к IntegrityError при unique / unique_together.
+    Теперь всегда гарантируется уникальность за счёт цикла.
     """
     model = instance.__class__
-    unique_slug = slug_field
-    if not slug_field:
-        unique_slug = slugify(slug)
-    elif model.objects.filter(slug=slug_field).exclude(id=instance.id).exists():
-        unique_slug = f'{slugify(slug)}-{uuid4().hex[:8]}'
+    base = slugify(slug) or 'item'
+    # Если slug_field задан явно, используем его как начальное значение иначе base
+    unique_slug = slug_field or base
+    # Если совпадает — добавляем суффикс
+    while model.objects.filter(slug=unique_slug).exclude(id=instance.id).exists():
+        unique_slug = f"{base}-{uuid4().hex[:8]}"
     return unique_slug
 
 
@@ -29,7 +34,6 @@ class FormStyleMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         for field_name, field in self.fields.items():
             field.widget.attrs.update({
                 'class': 'form-control',
@@ -50,7 +54,6 @@ class PlaceholderAndStyleMixin:
                 field.widget.attrs.update({
                     'placeholder': self.placeholders[field_name]
                 })
-            # Общие атрибуты для всех полей
             field.widget.attrs.update({
                 'class': 'form-control',
                 'autocomplete': 'off'

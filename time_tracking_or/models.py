@@ -70,6 +70,14 @@ class TimeInterval(models.Model):
             self.duration = end_dt - start_dt
         super().save(*args, **kwargs)
 
+    @property
+    def updated(self):  # для sitemap
+        return self.date_create
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('interval_detail', kwargs={'pk': self.pk})
+
 
 class DailySummary(models.Model):
     """Denormalized daily totals for quick dashboard access."""

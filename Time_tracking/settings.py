@@ -12,9 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from django.urls import re_path
-
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -62,8 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django.contrib.sites',
     'django.contrib.sitemaps',
-
-    'django.contrib.postgres',
+    # prod only: 'django.contrib.postgres' (см. settings_prod.py)
     'accounts.apps.AccountsConfig',
     'time_tracking_or.apps.TimeTrackingOrConfig',
     'oauth2_provider',
@@ -124,12 +122,12 @@ WSGI_APPLICATION = "Time_tracking.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE'),
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASS'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASS', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
     }
 }
 
@@ -260,3 +258,128 @@ SOCIAL_AUTH_PIPELINE = (  # Последовательность обработ�
     "social_core.pipeline.social_auth.load_extra_data",  # Загрузка всех дополнительных данных
     "social_core.pipeline.user.user_details",  # Обновление информации о пользователе
 )
+
+# Параметры для VK ID виджета (используются во фронтенде)
+VKID_APP_ID = os.getenv('VKID_APP_ID') or SOCIAL_AUTH_VK_OAUTH2_KEY
+VKID_REDIRECT_URL = (
+    os.getenv('VKID_REDIRECT_URL')
+    or os.getenv('SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI')
+    or 'http://127.0.0.1:8000/accounts/complete/vk-app/'
+)
+VKID_SCOPE = os.getenv('VKID_SCOPE', 'email')
+
+# Логирование ---------------------------------------------------------------
+# Создаём (или определяем) директорию логов с учётом переменной окружения LOG_DIR
+
+def _prepare_log_dir() -> Path:
+    raw = os.getenv('LOG_DIR')
+    if raw:
+        candidate = Path(raw)
+    else:
+        candidate = BASE_DIR / 'logs'
+    # Пытаемся создать и проверить на запись; в случае проблем — fallback в /tmp
+    for path in (candidate, Path('/tmp/time_tracking_logs')):
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            test_file = path / '.write_test'
+            with open(test_file, 'w', encoding='utf-8') as f:  # проверка прав
+                f.write('ok')
+            test_file.unlink(missing_ok=True)
+            return path
+        except Exception as e:  # noqa: BLE001 - хотим перехватить любую ошибку чтобы не ронять старт
+            print(f"[WARN] Cannot use log dir {path}: {e}")
+    # Если вообще ничего не удалось — последний fallback
+    return Path('.')
+
+LOG_DIR = _prepare_log_dir()
+
+# Если нужно — можно быстро отключить файл логов VK через переменную
+ENABLE_VK_FILE_LOG = os.getenv('ENABLE_VK_FILE_LOG', 'True') == 'True'
+
+_vk_handlers = []
+if ENABLE_VK_FILE_LOG:
+    _vk_handlers.append('vk_auth_file')
+else:
+    _vk_handlers.append('console')  # хотя бы что‑то
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'vk_verbose': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s %(filename)s:%(lineno)d %(message)s'
+        },
+        'simple': {
+            'format': '%(asctime)s [%(levelname)s] %(message)s'
+        },
+    },
+    'handlers': {
+        'vk_auth_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'vk_auth.log'),
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'formatter': 'vk_verbose',
+            'level': 'INFO',
+            'delay': True,  # откладываем реальное открытие файла до первой записи
+        },
+            'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+            'level': 'WARNING',
+        },
+    },
+    'loggers': {
+        'vk_auth': {
+            'handlers': _vk_handlers,
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+}
+
+# Кеширование ---------------------------------------------------------------
+# Redis в качестве основного cache backend. Fallback на локальную память если нет redis / пакета.
+try:
+    import django_redis  # noqa: F401
+    _redis_cache_url = (
+        os.getenv('REDIS_CACHE_URL') or
+        os.getenv('CACHE_URL') or
+        f"redis://{os.getenv('REDIS_HOST', '127.0.0.1')}:{os.getenv('REDIS_PORT', '6379')}/{os.getenv('REDIS_DB_CACHE', '1')}"
+    )
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': _redis_cache_url,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'PARSER_CLASS': os.getenv('REDIS_PARSER_CLASS', '' ) or None,
+                'CONNECTION_POOL_KWARGS': {'max_connections': int(os.getenv('REDIS_MAX_CONN', '50'))},
+            },
+            'KEY_PREFIX': os.getenv('CACHE_KEY_PREFIX', 'tt'),
+            'TIMEOUT': int(os.getenv('CACHE_DEFAULT_TIMEOUT', '300')),
+        }
+    }
+except Exception as _cache_exc:  # noqa: BLE001
+    print(f"[WARN] Redis cache disabled, fallback to LocMemCache: {_cache_exc}")
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'tt-locmem',
+            'TIMEOUT': int(os.getenv('CACHE_DEFAULT_TIMEOUT', '300')),
+        }
+    }
+
+# Опционально включить site-wide кеш через middleware (по умолчанию выключено).
+# Чтобы включить — выставьте ENABLE_SITE_CACHE=True в .env.
+if os.getenv('ENABLE_SITE_CACHE', 'False') == 'True':
+    # Вставляем UpdateCacheMiddleware в начало и FetchFromCacheMiddleware в конец цепочки (до CommonMiddleware уже поздно)
+    _mw = list(MIDDLEWARE)
+    if 'django.middleware.cache.UpdateCacheMiddleware' not in _mw:
+        _mw.insert(0, 'django.middleware.cache.UpdateCacheMiddleware')
+    if 'django.middleware.cache.FetchFromCacheMiddleware' not in _mw:
+        _mw.append('django.middleware.cache.FetchFromCacheMiddleware')
+    MIDDLEWARE = _mw
+    CACHE_MIDDLEWARE_SECONDS = int(os.getenv('CACHE_MIDDLEWARE_SECONDS', '120'))
+    CACHE_MIDDLEWARE_KEY_PREFIX = os.getenv('CACHE_KEY_PREFIX', 'tt')
