@@ -124,6 +124,9 @@ __pypackages__/
 celerybeat-schedule
 celerybeat.pid
 
+# macOS metadata
+__MACOSX/
+
 # SageMath parsed files
 *.sage.py
 
@@ -183,3 +186,5 @@ time.zip
 /templates/registration2/
 /deploy/
 /time_tracking.zip
+gunicorn.sh
+static/admin/
