@@ -259,19 +259,19 @@ SOCIAL_AUTH_PIPELINE = (  # Последовательность обработ�
     "social_core.pipeline.user.user_details",  # Обновление информации о пользователе
 )
 
-# Параметры для VK ID виджета (используются во фронтенде)
-VKID_APP_ID = os.getenv('VKID_APP_ID') or SOCIAL_AUTH_VK_OAUTH2_KEY
-VKID_REDIRECT_URL = (
-    os.getenv('VKID_REDIRECT_URL')
-    or os.getenv('SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI')
-    or 'http://127.0.0.1:8000/accounts/complete/vk-app/'
-)
-VKID_SCOPE = os.getenv('VKID_SCOPE', 'email')
+# # Параметры для VK ID виджета (используются во фронтенде)
+# VKID_APP_ID = os.getenv('VKID_APP_ID') or SOCIAL_AUTH_VK_OAUTH2_KEY
+# VKID_REDIRECT_URL = (
+#     os.getenv('VKID_REDIRECT_URL')
+#     or os.getenv('SOCIAL_AUTH_VK_OAUTH2_REDIRECT_URI')
+#     or 'http://127.0.0.1:8000/accounts/complete/vk-app/'
+# )
+# VKID_SCOPE = os.getenv('VKID_SCOPE', 'email')
 
 # Логирование ---------------------------------------------------------------
 # Используем стандартную конфигурацию Django без дополнительного логгера VK.
 # Это исключает создание файлов на диске при старте приложения.
-LOGGING = None
+# LOGGING = None
 
 # Кеширование ---------------------------------------------------------------
 # Redis в качестве основного cache backend. Fallback на локальную память если нет redis / пакета.
