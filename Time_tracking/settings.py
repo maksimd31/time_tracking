@@ -269,35 +269,9 @@ VKID_REDIRECT_URL = (
 VKID_SCOPE = os.getenv('VKID_SCOPE', 'email')
 
 # Логирование ---------------------------------------------------------------
-# Создаём (или определяем) директорию логов с учётом переменной окружения LOG_DIR
-
-def _prepare_log_dir() -> Path:
-    raw = os.getenv('LOG_DIR')
-    if raw:
-        candidate = Path(raw)
-    else:
-        candidate = BASE_DIR / 'logs'
-    # Пытаемся создать и проверить на запись; в случае проблем — fallback в /tmp
-    for path in (candidate, Path('/tmp/time_tracking_logs')):
-        try:
-            path.mkdir(parents=True, exist_ok=True)
-            test_file = path / '.write_test'
-            with open(test_file, 'w', encoding='utf-8') as f:  # проверка прав
-                f.write('ok')
-            test_file.unlink(missing_ok=True)
-            return path
-        except Exception as e:  # noqa: BLE001 - хотим перехватить любую ошибку чтобы не ронять старт
-            print(f"[WARN] Cannot use log dir {path}: {e}")
-    # Если вообще ничего не удалось — последний fallback
-    return Path('.')
-
-# Временно отключаем кастомную конфигурацию логов, чтобы исключить её из причины 500.
-# Django подхватит дефолтные настройки, запись в файлы отключена.
-LOG_DIR = _prepare_log_dir()
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-}
+# Используем стандартную конфигурацию Django без дополнительного логгера VK.
+# Это исключает создание файлов на диске при старте приложения.
+LOGGING = None
 
 # Кеширование ---------------------------------------------------------------
 # Redis в качестве основного cache backend. Fallback на локальную память если нет redis / пакета.
