@@ -188,3 +188,7 @@ time.zip
 /time_tracking.zip
 gunicorn.sh
 static/admin/
+prepare.sh
+update.sh
+git_update.sh
+/Time_tracking/gunicorn_config.py
