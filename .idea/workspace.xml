@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="feat: Add test settings and coverage configuration for improved testing environment">
-      <change afterPath="$PROJECT_DIR$/Time_tracking/settings_prod.py" afterDir="false" />
+    <list default="true" id="6fcb2398-ef36-42ba-b0c5-463989ae9c70" name="Changes" comment="feat: Add production settings for enhanced security and performance">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -253,7 +253,7 @@
       <workItem from="1758988613915" duration="1678000" />
       <workItem from="1759052817855" duration="3608000" />
       <workItem from="1759139339531" duration="3000" />
-      <workItem from="1759139357654" duration="4309000" />
+      <workItem from="1759139357654" duration="5494000" />
     </task>
     <task id="LOCAL-00001" summary="add servis unique_slugify - add unique_slug.&#10;update models.py accounts Profil + add signls">
       <option name="closed" value="true" />
@@ -519,7 +519,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759143077775</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="feat: Add production settings for enhanced security and performance">
+      <option name="closed" value="true" />
+      <created>1759143690903</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1759143690903</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -570,7 +578,8 @@
     <MESSAGE value="update README.md" />
     <MESSAGE value="add timer js vrema" />
     <MESSAGE value="feat: Add test settings and coverage configuration for improved testing environment" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: Add test settings and coverage configuration for improved testing environment" />
+    <MESSAGE value="feat: Add production settings for enhanced security and performance" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: Add production settings for enhanced security and performance" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

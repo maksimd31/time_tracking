@@ -291,52 +291,12 @@ def _prepare_log_dir() -> Path:
     # Если вообще ничего не удалось — последний fallback
     return Path('.')
 
+# Временно отключаем кастомную конфигурацию логов, чтобы исключить её из причины 500.
+# Django подхватит дефолтные настройки, запись в файлы отключена.
 LOG_DIR = _prepare_log_dir()
-
-# Если нужно — можно быстро отключить файл логов VK через переменную
-ENABLE_VK_FILE_LOG = os.getenv('ENABLE_VK_FILE_LOG', 'True') == 'True'
-
-_vk_handlers = []
-if ENABLE_VK_FILE_LOG:
-    _vk_handlers.append('vk_auth_file')
-else:
-    _vk_handlers.append('console')  # хотя бы что‑то
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'vk_verbose': {
-            'format': '%(asctime)s [%(levelname)s] %(name)s %(filename)s:%(lineno)d %(message)s'
-        },
-        'simple': {
-            'format': '%(asctime)s [%(levelname)s] %(message)s'
-        },
-    },
-    'handlers': {
-        'vk_auth_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOG_DIR / 'vk_auth.log'),
-            'maxBytes': 5 * 1024 * 1024,  # 5MB
-            'backupCount': 5,
-            'encoding': 'utf-8',
-            'formatter': 'vk_verbose',
-            'level': 'INFO',
-            'delay': True,  # откладываем реальное открытие файла до первой записи
-        },
-            'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-            'level': 'WARNING',
-        },
-    },
-    'loggers': {
-        'vk_auth': {
-            'handlers': _vk_handlers,
-            'level': 'INFO',
-            'propagate': False,
-        },
-    }
 }
 
 # Кеширование ---------------------------------------------------------------
