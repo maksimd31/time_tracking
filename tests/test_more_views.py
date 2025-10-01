@@ -1,12 +1,9 @@
 import pytest
+from datetime import time
 from django.urls import reverse
 from django.utils import timezone
-from datetime import time, timedelta
-from time_tracking_or.models import TimeCounter, TimeInterval
-from django.contrib.auth.models import User
-from services.utils import unique_slugify
-from django.core import mail
 from accounts.tasks import send_welcome_email
+from time_tracking_or.models import TimeCounter, TimeInterval
 
 @pytest.mark.django_db
 def test_dashboard_htmx_partial(auth_client, counter):
@@ -18,15 +15,6 @@ def test_dashboard_htmx_partial(auth_client, counter):
     assert resp.status_code == 200
     assert 'chart_labels' in resp.context
 
-@pytest.mark.django_db
-def test_history_hx_pause_flow(auth_client, counter):
-    # start active interval
-    auth_client.post(reverse('counter_start', args=[counter.id]))
-    # pause with hx and history -> triggers hx_response history branch
-    resp = auth_client.post(reverse('counter_pause', args=[counter.id]), {'history': '1'}, **{"HTTP_HX-Request": "true"})
-    assert resp.status_code == 200
-    # response should contain table container id
-    assert "history-intervals" in resp.content.decode('utf-8')
 
 @pytest.mark.django_db
 def test_stop_hx_flow(auth_client, counter):

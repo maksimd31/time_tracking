@@ -27,7 +27,7 @@
                 </div>
             </div>
             <div class="text-center text-lg-start">
-                <div class="d-inline-flex flex-column px-4 py-3 bg-white text-dark rounded-4" style="color: var(--text-color);">
+                <div class="d-inline-flex flex-column px-4 py-3 bg-white text-dark rounded-4 total-block" data-total-block style="color: var(--text-color);">
                     <span class="text-muted-soft">Итог за {{ selected_date|ru_date }}</span>
                     <span class="fs-3 fw-bold"
                           data-total-duration
@@ -136,7 +136,8 @@
                                       {% if stats.active_interval %}
                                         data-interval-timer
                                         data-start="{{ stats.active_interval.day|date:'Y-m-d' }}T{{ stats.active_interval.start_time|time:'H:i:s' }}"
-                                      {% endif %}>
+                                      {% endif %}
+                                      data-normalize-duration>
                                     {{ stats.total_duration|duration_format }}
                                 </span>
                             </a>

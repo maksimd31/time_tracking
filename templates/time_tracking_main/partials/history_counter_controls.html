@@ -5,15 +5,16 @@
       <h5 class="mb-1">Управление: {{ counter.name }}</h5>
       <div class="text-muted-soft small">Запускайте и останавливайте интервалы прямо здесь</div>
       <div class="mt-2 d-inline-flex flex-column px-3 py-2 bg-white rounded-3 shadow-sm">
-        <span class="text-muted-soft">Текущая длительность</span>
+        <span class="text-muted-soft small">Текущая длительность</span>
         <span class="fw-semibold timer-display"
               data-counter-timer
-              data-offset="{{ active_total|default:0 }}"
+              data-offset="0"
               {% if active_interval %}
                 data-interval-timer
                 data-start="{{ active_interval.day|date:'Y-m-d' }}T{{ active_interval.start_time|time:'H:i:s' }}"
-              {% endif %}>
-            {% if active_interval %}{{ active_interval.duration|default:'0 ч 00 мин 00 секунд' }}{% else %}0 ч 00 мин 00 секунд{% endif %}
+              {% endif %}
+              data-normalize-duration>
+            {% if active_interval %}{{ active_interval.duration|default:'00:00:00'|duration_format }}{% else %}{{ '00:00:00'|duration_format }}{% endif %}
         </span>
       </div>
     </div>
@@ -41,18 +42,6 @@
         {% if page_obj.number %}<input type="hidden" name="page" value="{{ page_obj.number }}">{% endif %}
         <button type="submit" class="btn btn-outline-secondary btn-stop"
                 {% if not active_interval %}disabled{% endif %}>Стоп</button>
-      </form>
-      <form method="post"
-            class="counter-action-form pause-form"
-            hx-post="{% url 'counter_pause' counter.id %}"
-            hx-target="#history-counter-controls"
-            hx-swap="outerHTML"
-            hx-disabled-elt="button">
-        {% csrf_token %}
-        <input type="hidden" name="history" value="1">
-        {% if page_obj.number %}<input type="hidden" name="page" value="{{ page_obj.number }}">{% endif %}
-        <button type="submit" class="btn btn-outline-secondary"
-                {% if not active_interval %}disabled{% endif %}>Пауза</button>
       </form>
     </div>
   </div>

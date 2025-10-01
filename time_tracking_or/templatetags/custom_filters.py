@@ -25,21 +25,40 @@ def format_time(value):
 
 @register.filter
 def duration_format(duration):
-    """Convert `timedelta` or `HH:MM:SS` string into readable text."""
+    """Convert `timedelta` or `HH:MM:SS` string into a compact clock-like text."""
     if isinstance(duration, str):
         parts = duration.split(':')
         if len(parts) == 3:
-            hours, minutes, seconds = map(int, parts)
+            try:
+                hours, minutes, seconds = map(int, parts)
+            except ValueError:
+                return "Неверный формат времени"
             duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
         else:
-            return  "Неверный формат времени"
-
+            return "Неверный формат времени"
 
     if isinstance(duration, timedelta):
         total_seconds = int(duration.total_seconds())
+        if total_seconds < 0:
+            total_seconds = abs(total_seconds)
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
-        return f"{hours} ч {str(minutes).zfill(2)} мин {str(seconds).zfill(2)} секунд"
+
+        if hours == 0:
+            return f"{minutes:02}:{seconds:02}"
+
+        def _hour_word(value: int) -> str:
+            """Return Russian word form for "hour" based on numeric value."""
+            if 11 <= value % 100 <= 14:
+                return "часов"
+            tail = value % 10
+            if tail == 1:
+                return "час"
+            if 2 <= tail <= 4:
+                return "часа"
+            return "часов"
+
+        return f"{hours} {_hour_word(hours)} {minutes:02}:{seconds:02}"
 
     return "Неверный формат времени"
 

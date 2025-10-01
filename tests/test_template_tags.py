@@ -38,8 +38,9 @@ def test_format_time(val, expected):
     assert custom_filters.format_time(val) == expected
 
 @pytest.mark.parametrize('val,expected', [
-    (timedelta(hours=1, minutes=2, seconds=3), '1 ч 02 мин 03 секунд'),
-    ('01:02:03','1 ч 02 мин 03 секунд'),
+    (timedelta(minutes=2, seconds=3), '02:03'),
+    (timedelta(hours=1, minutes=2, seconds=3), '1 час 02:03'),
+    ('01:02:03', '1 час 02:03'),
     ('bad', 'Неверный формат времени')
 ])
 def test_duration_format(val, expected):
@@ -72,9 +73,8 @@ def test_get_summary_filters(user, django_assert_num_queries):
     ds = DailySummary.objects.create(user=user, date=today, interval_count=2, total_time=timedelta(hours=1))
     qs = DailySummary.objects.filter(user=user)
     assert custom_filters.get_summary_interval_count(qs, today) == 2
-    assert '1 ч' in custom_filters.get_summary_total_time(qs, today)
+    assert '1 час' in custom_filters.get_summary_total_time(qs, today)
 
 @pytest.mark.parametrize('val', [None, datetime.now()])
 def test_ru_date_no_error(val):
     custom_filters.ru_date(val)
-
