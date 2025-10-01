@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-modern sticky-top">
     <div class="container">
         <a class="navbar-brand" href="{% url 'home' %}">
-            <span class="mark">⏱</span> Время Учёбы
+            <span class="mark">⏱</span> Подсчет времени
         </a>
         <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
                 aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -12,6 +12,28 @@
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 {% if user.is_authenticated %}
                     {% user_profile request.user as nav_profile %}
+                    {% if request.session.is_guest %}
+                        <li class="nav-item me-lg-3 position-relative guest-badge">
+                            <span class="badge bg-warning text-dark px-3 py-2">Гостевой режим</span>
+                            <div class="guest-tooltip">
+                                <h6 class="fw-semibold mb-2">Гостевой режим</h6>
+                                <p class="mb-2">Мы сохранили ваши счетчики по IP. Данные доступны пока вы используете это устройство и сеть.</p>
+                                <ul class="list-unstyled mb-2">
+                                    <li>• Один браузер, без синхронизации</li>
+                                    <li>• Аналитика скрыта</li>
+                                    <li>• Доступ ограничен текущим IP</li>
+                                </ul>
+                                <div class="guest-tooltip__footer">
+                                    <span class="text-muted">Создайте аккаунт и получите:</span>
+                                    <ul class="list-unstyled mb-0">
+                                        <li>• Сохранение счетчиков в облаке</li>
+                                        <li>• Аналитику и статистику</li>
+                                        <li>• Доступ с любого устройства</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Счетчики</a>
                     </li>
@@ -30,16 +52,24 @@
                             <span>{{ request.user.get_full_name|default:request.user.username }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                            {% if nav_profile.profile %}
+                            {% if nav_profile.profile and not request.session.is_guest %}
                                 <li><a class="dropdown-item" href="{% url 'profile_detail' nav_profile.profile.slug %}">Профиль и настройки</a></li>
                             {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form action="{% url 'logout' %}" method="post" class="px-3">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-link p-0 text-decoration-none">Выйти</button>
-                                </form>
-                            </li>
+                            {% if request.session.is_guest %}
+                                <li><a class="dropdown-item" href="{% url 'register' %}">Создать аккаунт</a></li>
+                                <li><a class="dropdown-item" href="{% url 'login' %}">Войти</a></li>
+                                <li><span class="dropdown-item-text text-muted">Гостевой режим</span></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            {% if not request.session.is_guest %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post" class="px-3">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link p-0 text-decoration-none">Выйти</button>
+                                    </form>
+                                </li>
+                            {% endif %}
                         </ul>
                     </li>
                 {% else %}
@@ -54,3 +84,45 @@
         </div>
     </div>
 </nav>
+
+{% if request.session.is_guest %}
+<style>
+    .guest-badge .guest-tooltip {
+        display: none;
+        position: absolute;
+        top: 110%;
+        right: 0;
+        width: min(340px, calc(100vw - 2rem));
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(26px);
+        color: #e2e8f0;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        padding: 1.25rem 1.35rem;
+        z-index: 2000;
+    }
+    .guest-badge:hover .guest-tooltip {
+        display: block;
+    }
+    .guest-tooltip ul {
+        padding-left: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .guest-tooltip h6 {
+        font-size: 0.95rem;
+        color: #f8fafc;
+        letter-spacing: 0.01em;
+    }
+    .guest-tooltip p,
+    .guest-tooltip li {
+        font-size: 0.86rem;
+        line-height: 1.45;
+        color: #cbd5f5;
+    }
+    .guest-tooltip__footer {
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        padding-top: 0.75rem;
+    }
+</style>
+{% endif %}

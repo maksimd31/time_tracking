@@ -3,7 +3,7 @@
 ![Django](https://img.shields.io/badge/Django-4.x-green?logo=django)
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
 
-**time_tracking** — это современное веб-приложение для персонального учёта времени, разработанное на Django.
+**Подсчет времени** — это современное веб-приложение для персонального учёта времени, разработанное на Django.
 
 ---
 

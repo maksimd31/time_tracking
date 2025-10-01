@@ -2,6 +2,54 @@
 {% load custom_filters %}
 
 {% block content %}
+{% if guest_mode %}
+<style>
+    :root {
+        --navbar-height: 72px;
+    }
+    .analytics-content--blur {
+        position: relative;
+        pointer-events: none;
+        user-select: none;
+    }
+    .analytics-content--blur::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        top: 0;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(6px);
+        pointer-events: none;
+    }
+    .analytics-overlay {
+        position: fixed;
+        top: var(--navbar-height, 72px);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(2px);
+        background: rgba(7, 13, 30, 0.45);
+        z-index: 1050;
+        padding: 1.5rem;
+        pointer-events: none;
+    }
+    .analytics-overlay__card {
+        max-width: 480px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+        pointer-events: auto;
+    }
+</style>
+{% endif %}
+
+<div class="analytics-content {% if guest_mode %}analytics-content--blur{% endif %}">
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4">
     <div>
         <h1 class="h3 mb-1">Аналитика</h1>
@@ -112,6 +160,8 @@
 </div>
 {% endif %}
 
+</div>
+
 <script>
     function toggleCustomRange(value) {
         const isCustom = value === 'custom';
@@ -120,4 +170,17 @@
     }
     toggleCustomRange('{{ period_key }}');
 </script>
+
+{% if guest_mode %}
+<div class="analytics-overlay">
+    <div class="analytics-overlay__card">
+        <h2 class="h4 mb-3">Аналитика доступна только зарегистрированным пользователям</h2>
+        <p class="text-muted mb-4">Создайте аккаунт, чтобы синхронизировать счетчики между устройствами и получать подробные отчёты.</p>
+        <div class="d-flex flex-column gap-2">
+            <a class="btn btn-primary" href="{% url 'register' %}">Создать аккаунт</a>
+            <a class="btn btn-outline-secondary" href="{% url 'login' %}">Уже есть аккаунт? Войти</a>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

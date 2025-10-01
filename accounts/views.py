@@ -23,6 +23,7 @@ import secrets
 from django.shortcuts import render, redirect
 from dotenv import load_dotenv
 from django.contrib import messages
+from time_tracking_or.models import DailySummary, TimeCounter, TimeInterval
 
 load_dotenv()
 
@@ -30,6 +31,32 @@ logger = logging.getLogger('vk_auth')
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+
+
+def _transfer_guest_data(guest_user_id, target_user):
+    """Move guest counters and intervals to the authenticated user."""
+    if not guest_user_id or not target_user:
+        return
+
+    try:
+        guest_user_id = int(guest_user_id)
+    except (TypeError, ValueError):
+        return
+
+    if guest_user_id == target_user.id:
+        return
+
+    UserModel = get_user_model()
+    try:
+        guest_user = UserModel.objects.get(id=guest_user_id)
+    except UserModel.DoesNotExist:
+        return
+
+    with transaction.atomic():
+        TimeCounter.objects.filter(user=guest_user).update(user=target_user)
+        TimeInterval.objects.filter(user=guest_user).update(user=target_user)
+        DailySummary.objects.filter(user=guest_user).update(user=target_user)
+        guest_user.delete()
 
 class ChangePasswordView(LoginRequiredMixin, SuccessMessageMixin, PasswordChangeView):
     """Allow an authenticated user to change their password."""
@@ -135,10 +162,15 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
 
     def form_valid(self, form):
         """Persist the user and authenticate them via default backend."""
+        guest_user_id = self.request.session.get('guest_user_id')
         response = super().form_valid(form)
         user = self.object
         backend = 'django.contrib.auth.backends.ModelBackend'
         login(self.request, user, backend=backend)
+        _transfer_guest_data(guest_user_id, user)
+        self.request.session['is_guest'] = False
+        self.request.session.pop('guest_ip', None)
+        self.request.session.pop('guest_user_id', None)
         return response
 
 
@@ -151,7 +183,12 @@ class UserLoginView(SuccessMessageMixin, LoginView):
 
     def form_valid(self, form):
         """Adjust session expiry according to the remember-me checkbox."""
+        guest_user_id = self.request.session.get('guest_user_id')
         response = super().form_valid(form)
+        _transfer_guest_data(guest_user_id, self.request.user)
+        self.request.session['is_guest'] = False
+        self.request.session.pop('guest_ip', None)
+        self.request.session.pop('guest_user_id', None)
         remember_me = form.cleaned_data.get('remember_me')
         if not remember_me:
             self.request.session.set_expiry(60 * 60 * 24)

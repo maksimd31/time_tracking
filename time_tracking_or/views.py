@@ -242,6 +242,16 @@ class CounterHistoryView(LoginRequiredMixin, ListView):
         start, end = self.get_date_filters()
         intervals = self.get_queryset().filter(end_time__isnull=False)
         aggregate = intervals.aggregate(total=Sum('duration'), count=Count('id'))
+        active_interval = self.counter.intervals.filter(end_time__isnull=True).order_by('-date_create').first()
+        active_total = 0
+        if active_interval and active_interval.start_time:
+            day_total = (
+                self.counter.intervals
+                .filter(day=active_interval.day, end_time__isnull=False)
+                .aggregate(total=Sum('duration'))['total']
+                or timedelta()
+            )
+            active_total = int(day_total.total_seconds())
         context.update(
             {
                 'counter': self.counter,
@@ -249,6 +259,8 @@ class CounterHistoryView(LoginRequiredMixin, ListView):
                 'filter_end': end,
                 'total_duration': aggregate['total'] or timedelta(),
                 'interval_count': aggregate['count'] or 0,
+                'active_interval': active_interval,
+                'active_total': active_total,
             }
         )
         return context
@@ -637,6 +649,11 @@ class CounterSummaryView(LoginRequiredMixin, TemplateView):
         'custom': 'Произвольный период',
     }
 
+    def dispatch(self, request, *args, **kwargs):
+        """Allow access but mark guest sessions for overlay."""
+        self.guest_mode = bool(request.session.get('is_guest'))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_period_range(self):
         """Resolve selected period into a concrete (start, end) tuple."""
         period = self.request.GET.get('period', 'week')
@@ -665,6 +682,22 @@ class CounterSummaryView(LoginRequiredMixin, TemplateView):
         """Populate template context with per-counter/day aggregates."""
         context = super().get_context_data(**kwargs)
         period, start, end = self.get_period_range()
+        context.update(
+            {
+                'period_key': period,
+                'periods': self.PERIODS,
+                'start': start,
+                'end': end,
+                'guest_mode': getattr(self, 'guest_mode', False),
+            }
+        )
+
+        if getattr(self, 'guest_mode', False):
+            context.setdefault('per_counter', [])
+            context.setdefault('per_day', [])
+            context.setdefault('summary_total', timedelta())
+            return context
+
         intervals = TimeInterval.objects.filter(
             user=self.request.user,
             day__range=(start, end),
@@ -680,10 +713,6 @@ class CounterSummaryView(LoginRequiredMixin, TemplateView):
 
         context.update(
             {
-                'period_key': period,
-                'periods': self.PERIODS,
-                'start': start,
-                'end': end,
                 'per_counter': per_counter,
                 'per_day': per_day,
                 'summary_total': summary_total,

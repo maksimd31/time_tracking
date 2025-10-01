@@ -9,14 +9,21 @@
     <section class="hero-card mb-5">
         <div class="d-flex flex-column flex-lg-row align-items-center">
             <div class="me-lg-5 mb-4 mb-lg-0">
-                <h1 class="mb-3">Ваши проекты и задачи — под контролем</h1>
+                <h1 class="mb-3">Подсчет времени — фиксируйте, анализируйте, улучшайте</h1>
                 <p>
-                    Создавайте отдельные счетчики для разных направлений, фиксируйте интервалы в пару кликов и
-                    анализируйте, куда уходит время.
+                    Создавайте отдельные счетчики для учебы, работы и хобби, чтобы видеть, куда уходят часы, и держать прогресс на виду.
                 </p>
-                <div class="d-flex gap-3">
+                {% if request.session.is_guest %}
+                    <div class="alert alert-light text-dark rounded-4" role="alert">
+                        Вы в гостевом режиме. Создайте аккаунт, чтобы синхронизировать счетчики между устройствами.
+                    </div>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-3">
                     <a class="btn btn-light text-dark" href="{% url 'counter_create' %}">Новый счетчик</a>
                     <a class="btn btn-outline-light" href="{% url 'counter_summary' %}">Посмотреть аналитику</a>
+                    {% if request.session.is_guest %}
+                        <a class="btn btn-primary" href="{% url 'register' %}">Создать аккаунт</a>
+                    {% endif %}
                 </div>
             </div>
             <div class="text-center text-lg-start">

@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import logging
+from celery.schedules import crontab
 
 load_dotenv()
 
@@ -74,6 +75,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "accounts.middleware.GuestIPAuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -229,6 +231,17 @@ CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
 CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'True') == 'True'
 CELERY_TASK_EAGER_PROPAGATES = True
+
+GUEST_ACCOUNT_RETENTION_DAYS = int(os.getenv('GUEST_ACCOUNT_RETENTION_DAYS', '14'))
+_guest_cleanup_hour = int(os.getenv('GUEST_CLEANUP_HOUR', '3'))
+_guest_cleanup_minute = int(os.getenv('GUEST_CLEANUP_MINUTE', '0'))
+
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-stale-guests': {
+        'task': 'accounts.tasks.cleanup_stale_guests',
+        'schedule': crontab(hour=_guest_cleanup_hour, minute=_guest_cleanup_minute),
+    }
+}
 
 # google
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')

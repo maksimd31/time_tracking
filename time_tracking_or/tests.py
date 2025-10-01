@@ -12,11 +12,12 @@ from .models import TimeCounter, TimeInterval
 
 class HomeAnonymousViewTest(TestCase):
     """Ensure landing page suggests registration to guests."""
-    def test_home_prompts_registration_for_anonymous_user(self):
-        """Anonymous visitors should see welcome template and register link."""
+    def test_home_prompts_registration_for_guest_user(self):
+        """Anonymous visitors become guests and still see registration offer."""
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'time_tracking_main/welcome.html')
+        self.assertTemplateUsed(response, 'time_tracking_main/counter_dashboard.html')
+        self.assertContains(response, 'Подсчет времени')
         self.assertContains(response, reverse('register'))
 
 

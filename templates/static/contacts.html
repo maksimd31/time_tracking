@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    :root { --navbar-height: 72px; }
+
+    .contact-page {
+        position: relative;
+        min-height: calc(100vh - var(--navbar-height));
+        padding: 4rem 1.5rem;
+    }
+
+    .contact-content {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - var(--navbar-height) - 8rem);
+    }
+
+    .contact-content::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(12px);
+        border-radius: 28px;
+        z-index: 0;
+    }
+
+    .contact-card {
+        position: relative;
+        z-index: 1;
+        width: min(620px, 100%);
+        background: rgba(255, 255, 255, 0.88);
+        border-radius: 24px;
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
+        backdrop-filter: blur(10px);
+    }
+
+    .contact-card h1,
+    .contact-card h2 {
+        color: #0f172a;
+    }
+
+    .contact-card p,
+    .contact-card li {
+        color: #475569;
+        line-height: 1.5;
+    }
+
+    .contact-card .contact-list a {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .contact-card .contact-list a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 767px) {
+        .contact-section { padding: 3rem 1rem; }
+        .contact-card { border-radius: 18px; }
+    }
+</style>
+
+<section class="contact-page">
+    <div class="contact-content">
+        <div class="contact-card">
+            <div class="card-body p-5">
+            <h1 class="h3 mb-3">Обратная связь</h1>
+            <p class="text-muted mb-4">Если хотите оставить отзыв, предложить идею или сообщить о проблеме — используйте любые удобные контакты ниже.</p>
+
+            <div class="mb-4">
+                <h2 class="h5">Контакты</h2>
+                <ul class="list-unstyled contact-list">
+                    <li class="mb-2"><strong>Почта:</strong> <a href="mailto:maksimdis31@icloud.com">maksimdis31@icloud.com</a></li>
+                    <li class="mb-2"><strong>Telegram:</strong> <a href="https://t.me/The_Chef12" target="_blank" rel="noopener">@The_Chef12</a></li>
+                    <li class="mb-2"><strong>GitHub:</strong> <a href="https://github.com/maksimd31" target="_blank" rel="noopener">maksimd31</a></li>
+                </ul>
+            </div>
+
+            <div class="alert alert-light border-0">
+                <h2 class="h6 fw-semibold">Новые возможности</h2>
+                <p class="mb-0">Планирую добавить совместные счетчики, экспорт данных и расширенную аналитику. Делитесь, какие инструменты нужны вам — это помогает развивать сервис.</p>
+            </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
