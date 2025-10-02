@@ -615,3 +615,27 @@ footer.site-footer {
         padding: 32px 0;
     }
 }
+
+/* ===== АДАПТИВНЫЕ УРОВНИ КОМПАКТНОСТИ (auto_adapt.js) ===== */
+body.auto-compact .navbar-modern .nav-link { padding: 6px 12px !important; }
+body.auto-compact-md .navbar-modern .nav-link { font-size: 0.92rem; }
+body.auto-compact-sm .navbar-modern .brand-text { display: none !important; }
+body.auto-compact-xs .nav-profile .user-name { display: none !important; }
+body.auto-compact-xxs .btn.btn-primary { padding: 4px 10px; font-size: 0.75rem; }
+body.auto-compact-xxs .navbar-modern .nav-link { padding: 5px 10px !important; font-size: 0.82rem; }
+
+/* Профильное меню: адаптация на очень узких экранах (фиксируем к правому краю) */
+@media (max-width: 520px) {
+    .nav-profile .dropdown-menu {
+        left: auto !important;        /* игнорируем левый край */
+        right: 6px !important;        /* прижимаем к правому краю с небольшим полем */
+        width: auto !important;       /* естественная ширина */
+        min-width: 210px !important;  /* базовая читаемая ширина */
+        max-width: calc(100vw - 12px);/* страховка, если экран совсем узкий */
+        transform: none !important;   /* убрать translate от popper при ограничении */
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: 70vh;             /* чтобы не вылезало ниже экрана */
+    }
+}
+
