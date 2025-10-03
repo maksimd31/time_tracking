@@ -192,3 +192,13 @@ prepare.sh
 update.sh
 git_update.sh
 /Time_tracking/gunicorn_config.py
+
+# Celery monitoring documentation
+CELERY_MONITORING.md
+CELERY_QUICKSTART.md
+
+# Pytest documentation
+PYTEST_README.md
+# Django migrations (ignored per user request)
+accounts/migrations/
+time_tracking_or/migrations/
