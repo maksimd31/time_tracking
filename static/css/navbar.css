@@ -1,0 +1,262 @@
+/* === АДАПТИВНАЯ НАВИГАЦИЯ === */
+
+/* Компактные стили для предотвращения переполнения */
+@media (max-width: 1200px) and (min-width: 992px) {
+    .navbar-modern .nav-link { padding: 6px 10px !important; font-size: 0.9rem; }
+    .navbar-modern .navbar-brand { font-size: 0.95rem; }
+    .guest-badge .badge { padding: 0.4rem 0.7rem !important; font-size: 0.7rem; }
+}
+
+@media (max-width: 700px) {
+    /* Скрываем текст бренда, оставляя только иконку */
+    .navbar-modern .navbar-brand { gap: 4px; }
+    .navbar-modern .navbar-brand .brand-text { display: none !important; }
+}
+
+/* Разрешаем перенос пунктов (чтобы не "исчезали") */
+@media (min-width: 992px) {
+    #primaryNavItems { flex-wrap: wrap; }
+    #primaryNavItems > li { margin-top: 2px; margin-bottom: 2px; }
+}
+
+/* Сокрытие ника при сужении ширины (для внешнего блока профиля) */
+@media (max-width: 1100px) and (min-width: 992px) {
+    .nav-profile .user-name { display: none !important; }
+}
+
+@media (max-width: 700px) {
+    .nav-profile .user-name { display: none !important; }
+}
+
+/* === ГОСТЕВОЙ БЕЙДЖ === */
+.guest-badge-fixed {
+    position: fixed !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1030;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+/* === ELLIPSIS МЕНЮ (ТРИ ТОЧКИ) === */
+.compact-ellipsis-wrapper { 
+    display: none; 
+}
+
+.compact-ellipsis-wrapper.ellipsis-visible { 
+    display: block; 
+    margin-left: 6px; 
+}
+
+.nav-ellipsis-btn { 
+    background: rgba(255,255,255,0.08); 
+    color: #fff; 
+    border: 1px solid rgba(255,255,255,0.2); 
+    padding: 4px 10px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 12px; 
+    font-weight: 600; 
+    font-size: 0.95rem; 
+    transition: all 0.3s ease;
+}
+
+.nav-ellipsis-btn:hover { 
+    background: rgba(255,255,255,0.18); 
+}
+
+.nav-ellipsis-btn .dots { 
+    letter-spacing: 2px; 
+}
+
+#compactExtraMenu { 
+    min-width: auto !important;
+    max-width: none !important;
+    width: max-content !important;
+    white-space: nowrap !important;
+    box-sizing: content-box !important;
+}
+
+#compactExtraMenu .dropdown-item {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    padding: 0.5rem 0.75rem !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: auto !important;
+    display: block !important;
+    word-break: keep-all !important;
+    text-wrap: nowrap !important;
+}
+
+/* Полное переопределение Bootstrap стилей */
+#compactExtraMenu li[data-overflow-clone] .dropdown-item {
+    all: unset !important;
+    display: block !important;
+    padding: 0.5rem 0.75rem !important;
+    color: var(--bs-dropdown-link-color) !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    width: auto !important;
+    min-width: auto !important;
+}
+
+#compactExtraMenu li[data-overflow-clone] .dropdown-item:hover {
+    background-color: var(--bs-dropdown-link-hover-bg) !important;
+    color: var(--bs-dropdown-link-hover-color) !important;
+}
+
+/* Кастомный класс для ellipsis элементов */
+.custom-ellipsis-item {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: none !important;
+    width: auto !important;
+    min-width: auto !important;
+    display: block !important;
+    word-break: keep-all !important;
+}
+
+/* === ФУНКЦИОНАЛЬНАЯ ОБЛАСТЬ === */
+.nav-functional { 
+    position: relative; 
+    min-width: 0; 
+}
+
+.nav-functional #primaryNavItems { 
+    flex-wrap: nowrap; 
+}
+
+.nav-functional #primaryNavItems > li { 
+    white-space: nowrap; 
+}
+
+/* Предотвращение обрезания текста в nav-link */
+.nav-functional .nav-link {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: initial !important;
+    min-width: max-content !important;
+}
+
+.compact-ellipsis-wrapper { 
+    margin-left: 8px; 
+}
+
+/* === ПОЛНАЯ ОПТИМИЗАЦИЯ ДЛЯ ВСЕХ УСТРОЙСТВ === */
+
+/* Экстра большие экраны (1400px+) - максимальная функциональность */
+@media (min-width: 1400px) {
+    .navbar-modern .nav-link { padding: 8px 16px !important; font-size: 1rem; }
+    .navbar-modern .navbar-brand { font-size: 1.1rem; }
+    .guest-badge-fixed .badge { padding: 0.5rem 1rem !important; font-size: 0.875rem; }
+    .nav-profile .user-name { display: inline !important; }
+}
+
+/* Большие экраны (1200-1399px) - полная функциональность */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .navbar-modern .nav-link { padding: 7px 14px !important; font-size: 0.95rem; }
+    .navbar-modern .navbar-brand { font-size: 1.05rem; }
+    .guest-badge-fixed .badge { padding: 0.45rem 0.9rem !important; font-size: 0.8rem; }
+}
+
+/* Средние экраны (992-1199px) - компактная функциональность */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .navbar-modern .nav-link { padding: 6px 12px !important; font-size: 0.9rem; }
+    .navbar-modern .navbar-brand { font-size: 1rem; }
+    .guest-badge-fixed .badge { padding: 0.4rem 0.8rem !important; font-size: 0.75rem; }
+    .nav-profile .user-name { font-size: 0.85rem; }
+}
+
+/* Планшеты (768-991px) - адаптивное сжатие */
+@media (min-width: 768px) and (max-width: 991px) {
+    .navbar-modern .nav-link { padding: 5px 10px !important; font-size: 0.85rem; }
+    .navbar-modern .navbar-brand { font-size: 0.95rem; }
+    .guest-badge-fixed .badge { padding: 0.35rem 0.7rem !important; font-size: 0.7rem; }
+    .nav-profile .user-name { display: none !important; }
+    .navbar-modern .brand-text { font-size: 0.9rem; }
+}
+
+/* Мобильные большие (576-767px) - максимальная компактность */
+@media (min-width: 576px) and (max-width: 767px) {
+    .navbar-modern .nav-link { padding: 4px 8px !important; font-size: 0.8rem; }
+    .navbar-modern .navbar-brand { font-size: 0.9rem; }
+    .navbar-modern .brand-text { display: none !important; }
+    .guest-badge-fixed .badge { padding: 0.3rem 0.6rem !important; font-size: 0.65rem; }
+    .nav-profile .user-name { display: none !important; }
+    .avatar-thumb { width: 28px; height: 28px; }
+}
+
+/* Мобильные малые (<576px) - минимальная функциональность */
+@media (max-width: 575px) {
+    .navbar-modern .nav-link { padding: 3px 6px !important; font-size: 0.75rem; }
+    .navbar-modern .navbar-brand { font-size: 0.85rem; }
+    .navbar-modern .brand-text { display: none !important; }
+    .guest-badge-fixed .badge { padding: 0.25rem 0.5rem !important; font-size: 0.6rem; }
+    .nav-profile .user-name { display: none !important; }
+    .avatar-thumb { width: 26px; height: 26px; }
+    .nav-ellipsis-btn { padding: 3px 8px; font-size: 0.8rem; }
+}
+
+/* === АДАПТИВНЫЙ ДРОПДАУН ПРОФИЛЯ === */
+.profile-dropdown-adaptive {
+    min-width: 200px;
+    transition: all 0.2s ease;
+}
+
+/* Адаптивное позиционирование дропдауна профиля */
+@media (min-width: 768px) {
+    .profile-dropdown-adaptive {
+        right: 0 !important;
+        left: auto !important;
+        min-width: 220px;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .profile-dropdown-adaptive {
+        right: -5px !important;
+        left: auto !important;
+        min-width: 190px;
+    }
+}
+
+@media (max-width: 575px) {
+    .profile-dropdown-adaptive {
+        right: -15px !important;
+        left: auto !important;
+        min-width: 170px;
+        transform: translateX(0) !important;
+    }
+    
+    .profile-dropdown-adaptive .dropdown-item {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .profile-dropdown-adaptive {
+        right: -25px !important;
+        min-width: 160px;
+    }
+    
+    .profile-dropdown-adaptive .dropdown-item {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* === УЛУЧШЕННЫЕ АНИМАЦИИ И ПЕРЕХОДЫ === */
+.navbar-modern, 
+.navbar-modern * {
+    transition: all 0.3s ease;
+}
+
+.guest-badge-fixed .badge {
+    transition: all 0.3s ease;
+}

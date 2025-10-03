@@ -104,8 +104,28 @@
       if (anchor) {
         const cloneLi = document.createElement('li');
         cloneLi.setAttribute('data-overflow-clone','1');
-        cloneLi.innerHTML = '<a class="dropdown-item" href="' + anchor.getAttribute('href') + '">' + anchor.textContent.trim() + '</a>';
+        const cloneAnchor = document.createElement('a');
+        cloneAnchor.className = 'dropdown-item custom-ellipsis-item';
+        cloneAnchor.href = anchor.getAttribute('href');
+        cloneAnchor.textContent = anchor.textContent.trim();
+        
+        // Принудительные inline стили
+        cloneAnchor.style.cssText = `
+          white-space: nowrap !important;
+          overflow: visible !important;
+          text-overflow: unset !important;
+          max-width: none !important;
+          width: auto !important;
+          min-width: auto !important;
+          display: block !important;
+          padding: 0.5rem 0.75rem !important;
+          text-decoration: none !important;
+        `;
+        
+        cloneLi.appendChild(cloneAnchor);
         menu.appendChild(cloneLi);
+        
+        console.log('Добавлен элемент в ellipsis:', anchor.textContent.trim());
       }
       li.classList.add('d-none');
       overflowState.items.push({ placeholder: ph, original: li });
