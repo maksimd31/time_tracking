@@ -199,6 +199,8 @@ CELERY_QUICKSTART.md
 
 # Pytest documentation
 PYTEST_README.md
-# Django migrations (ignored per user request)
-accounts/migrations/
-time_tracking_or/migrations/
+EMAIL_CONFIG.md
+
+# Django migrations (ignore all migration files; keep packages if restored)
+*/migrations/
+!*/migrations/__init__.py
