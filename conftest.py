@@ -66,3 +66,45 @@ def mock_vk_requests(monkeypatch):
     monkeypatch.setattr('accounts.views.requests.post', fake_post)
     monkeypatch.setattr('accounts.views.requests.get', fake_get)
     return True
+
+
+# Дополнительные fixtures для тестирования системы обратной связи
+@pytest.fixture
+def project_rating_user(db):
+    """Пользователь для тестирования рейтингов проекта."""
+    return User.objects.create_user(
+        username='ratinguser',
+        email='rating@test.com',
+        password='testpass123'
+    )
+
+
+@pytest.fixture
+def authenticated_rating_client(project_rating_user):
+    """Аутентифицированный клиент для тестов рейтингов."""
+    from django.test import Client
+    client = Client()
+    client.force_login(project_rating_user)
+    return client
+
+
+@pytest.fixture
+def sample_project_rating(project_rating_user):
+    """Образец рейтинга проекта."""
+    from time_tracking_or.models import ProjectRating
+    return ProjectRating.objects.create(
+        user=project_rating_user,
+        rating='like',
+        comment='Тестовый комментарий',
+        email_sent=False
+    )
+
+
+@pytest.fixture
+def mock_celery_email_task():
+    """Мок для Celery задачи отправки email."""
+    from unittest.mock import MagicMock
+    mock_task = MagicMock()
+    mock_task.id = 'test-celery-task-123'
+    mock_task.state = 'SUCCESS'
+    return mock_task

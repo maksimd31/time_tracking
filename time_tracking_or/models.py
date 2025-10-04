@@ -96,3 +96,28 @@ class DailySummary(models.Model):
     def __str__(self):
         """Display the day and username for admin lists."""
         return f"{self.date} - {self.user.username}"
+
+
+class ProjectRating(models.Model):
+    """User rating for the project - like or dislike."""
+    
+    RATING_CHOICES = [
+        ('like', '👍 Нравится'),
+        ('dislike', '👎 Не нравится'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='project_rating')
+    rating = models.CharField(max_length=10, choices=RATING_CHOICES, verbose_name='Оценка')
+    comment = models.TextField(blank=True, verbose_name='Комментарий о желаемом функционале')
+    email_sent = models.BooleanField(default=False, verbose_name='Комментарий отправлен на почту')
+    email_sent_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата отправки на почту')
+    celery_task_id = models.CharField(max_length=255, blank=True, verbose_name='ID задачи Celery')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Оценка проекта'
+        verbose_name_plural = 'Оценки проекта'
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.get_rating_display()}"

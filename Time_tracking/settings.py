@@ -190,8 +190,17 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False') == 'True'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
+EMAIL_SSL_CERTFILE = os.getenv('EMAIL_SSL_CERTFILE', None)
+EMAIL_SSL_KEYFILE = os.getenv('EMAIL_SSL_KEYFILE', None) 
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '30'))
 
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', "django.core.mail.backends.console.EmailBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend")
+
+# Для macOS: обход проблемы с SSL сертификатами в dev режиме
+if DEBUG:
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 # Конфигурация сервера электронной почты
 # EMAIL_HOST = "smtp.gmail.com"
@@ -199,8 +208,8 @@ EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', "django.core.mail.backends.smtp.Email
 # EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER if EMAIL_HOST_USER else 'noreply@timetracking.local'
+SERVER_EMAIL = EMAIL_HOST_USER if EMAIL_HOST_USER else 'noreply@timetracking.local'
 
 # https://docs.djangoproject.com/en/5.1/topics/email/
 
@@ -229,7 +238,7 @@ AUTHENTICATION_BACKENDS = (
 # Celery
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
-CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'True') == 'True'
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'False') == 'True'  # Изменено на False для работы через worker
 CELERY_TASK_EAGER_PROPAGATES = True
 
 GUEST_ACCOUNT_RETENTION_DAYS = int(os.getenv('GUEST_ACCOUNT_RETENTION_DAYS', '14'))

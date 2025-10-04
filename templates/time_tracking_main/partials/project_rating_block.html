@@ -1,0 +1,241 @@
+<!-- Блок оценки проекта -->
+<div class="card mb-4 mt-5">
+    <div class="card-body">
+        <div class="row">
+        <div class="col-lg-8">
+            <h5 class="mb-3">
+                <span class="me-2">💝</span>
+                Нравится проект?
+            </h5>
+            
+            <p class="mb-3 text-muted">
+                Хотите развитие проекта? Напишите, какой бы хотелось функционал! 
+                И оцените проект лайком или дизлайком.
+            </p>
+            
+            <!-- Форма для комментария -->
+            <div class="feedback-form mb-4">
+                <textarea id="feedback-comment" class="form-control" rows="3" 
+                          placeholder="Напишите, какой функционал хотелось бы видеть в проекте..."
+                          >{% if user_rating.comment %}{{ user_rating.comment }}{% endif %}</textarea>
+                
+                <!-- Кнопка отправить (показывается только при наличии текста) -->
+                <div class="mt-3">
+                    <button id="send-feedback-btn" class="btn btn-primary d-none" 
+                            hx-post="{% url 'send_feedback' %}" 
+                            hx-target="#feedback-status-container" 
+                            hx-swap="innerHTML"
+                            hx-include="#feedback-comment">
+                        <i class="fas fa-paper-plane me-2"></i>Отправить пожелания
+                    </button>
+                    
+                    {% if user_rating.email_sent %}
+                    <div class="text-success mt-2">
+                        <small>
+                            <i class="fas fa-check-circle me-1"></i>
+                            Ваши пожелания отправлены разработчику 
+                            ({{ user_rating.email_sent_at|date:"d.m.Y H:i" }})
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Контейнер для статуса отправки -->
+                <div id="feedback-status-container"></div>
+            </div>
+            
+            <!-- Форма оценки -->
+            <form id="project-rating-form" hx-post="{% url 'project_rating' %}" 
+                  hx-target="#rating-stats-container" hx-swap="innerHTML">
+                {% csrf_token %}
+                
+                <!-- Скрытое поле для комментария (синхронизируется с textarea выше) -->
+                <input type="hidden" name="comment" id="hidden-comment" value="{% if user_rating.comment %}{{ user_rating.comment }}{% endif %}">
+                
+                <!-- Кнопки лайк/дизлайк -->
+                <div class="rating-buttons mb-3">
+                    <button type="submit" name="rating" value="like" 
+                            class="btn btn-outline-success me-2 {% if user_rating.rating == 'like' %}active{% endif %}">
+                        <span class="me-1">👍</span> Нравится
+                    </button>
+                    
+                    <button type="submit" name="rating" value="dislike" 
+                            class="btn btn-outline-danger {% if user_rating.rating == 'dislike' %}active{% endif %}">
+                        <span class="me-1">👎</span> Не нравится
+                    </button>
+                </div>
+                
+
+            </form>
+        </div>
+        
+        <div class="col-lg-4">
+            <h6 class="mb-3">Статистика оценок:</h6>
+            <div id="rating-stats-container">
+                {% include 'time_tracking_main/partials/project_rating_stats.html' with stats=rating_stats %}
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+.rating-buttons .btn {
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.rating-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.rating-buttons .btn.active {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+
+
+#send-feedback-btn {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+#send-feedback-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+#send-feedback-btn:active {
+    transform: translateY(0);
+}
+
+.feedback-form textarea {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+.feedback-form textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+@media (max-width: 768px) {
+    .project-rating-block {
+        margin-top: 2rem;
+        padding: 1.5rem;
+    }
+    
+    .rating-buttons .btn {
+        min-width: 100px;
+        font-size: 0.9rem;
+    }
+    
+    #send-feedback-btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('feedback-comment');
+    const sendBtn = document.getElementById('send-feedback-btn');
+    const hiddenComment = document.getElementById('hidden-comment');
+    
+    // Функция для проверки и показа/скрытия кнопки
+    function toggleSendButton() {
+        const hasText = textarea.value.trim().length > 0;
+        
+        if (hasText) {
+            sendBtn.classList.remove('d-none');
+        } else {
+            sendBtn.classList.add('d-none');
+        }
+        
+        // Синхронизируем скрытое поле
+        if (hiddenComment) {
+            hiddenComment.value = textarea.value;
+        }
+    }
+    
+    // Отслеживаем изменения в textarea
+    if (textarea) {
+        textarea.addEventListener('input', toggleSendButton);
+        textarea.addEventListener('keyup', toggleSendButton);
+        textarea.addEventListener('paste', function() {
+            setTimeout(toggleSendButton, 10); // Задержка для обработки paste
+        });
+        
+        // Проверяем при загрузке страницы
+        toggleSendButton();
+    }
+    
+    // Обновляем скрытое поле перед отправкой формы рейтинга
+    const ratingForm = document.getElementById('project-rating-form');
+    if (ratingForm) {
+        ratingForm.addEventListener('htmx:configRequest', function() {
+            if (hiddenComment && textarea) {
+                hiddenComment.value = textarea.value;
+            }
+        });
+    }
+});
+
+// Обновляем активные кнопки после HTMX запроса
+document.addEventListener('htmx:afterRequest', function(event) {
+    // Обработка рейтинга
+    if (event.detail.target.id === 'rating-stats-container') {
+        const form = document.getElementById('project-rating-form');
+        const buttons = form.querySelectorAll('.rating-buttons .btn');
+        
+        // Снимаем активность со всех кнопок
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Активируем нажатую кнопку
+        if (event.detail.xhr.status === 200) {
+            const submitter = event.detail.requestConfig.elt;
+            if (submitter && submitter.name === 'rating') {
+                submitter.classList.add('active');
+            }
+        }
+    }
+    
+    // Обработка отправки feedback
+    if (event.detail.target.id === 'feedback-status-container') {
+        if (event.detail.xhr.status === 200) {
+            // Скрываем кнопку отправки после успешной отправки
+            const sendBtn = document.getElementById('send-feedback-btn');
+            if (sendBtn) {
+                sendBtn.classList.add('d-none');
+            }
+            
+            // Автоскрытие уведомления через 5 секунд
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('#feedback-status-container .alert');
+                alerts.forEach(alert => {
+                    if (alert) {
+                        alert.classList.add('fade');
+                        setTimeout(() => alert.remove(), 300);
+                    }
+                });
+            }, 5000);
+        }
+    }
+});
+
+// Добавляем поле comment в HTMX запрос для отправки feedback
+document.addEventListener('htmx:configRequest', function(event) {
+    if (event.detail.path === '{% url "send_feedback" %}') {
+        const textarea = document.getElementById('feedback-comment');
+        if (textarea) {
+            event.detail.parameters['comment'] = textarea.value;
+        }
+    }
+});
+</script>

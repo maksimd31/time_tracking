@@ -1,0 +1,36 @@
+<!-- Статистика рейтинга проекта -->
+<div class="rating-stats d-flex align-items-center gap-3">
+    <div class="like-stats d-flex align-items-center">
+        <span class="rating-icon">👍</span>
+        <span class="rating-count">{{ stats.total_likes|default:0 }}</span>
+    </div>
+    
+    <div class="dislike-stats d-flex align-items-center">
+        <span class="rating-icon">👎</span>
+        <span class="rating-count">{{ stats.total_dislikes|default:0 }}</span>
+    </div>
+    
+    <div class="total-stats text-muted ms-2">
+        <small>Всего оценок: {{ stats.total_ratings|default:0 }}</small>
+    </div>
+</div>
+
+<style>
+.rating-icon {
+    font-size: 1.2rem;
+    margin-right: 0.3rem;
+}
+
+.rating-count {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.like-stats .rating-count {
+    color: #28a745;
+}
+
+.dislike-stats .rating-count {
+    color: #dc3545;
+}
+</style>

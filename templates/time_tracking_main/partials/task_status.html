@@ -1,0 +1,34 @@
+<!-- Статус выполнения Celery задачи -->
+<div class="task-status mt-3">
+    {% if status == 'PENDING' or not ready %}
+        <div class="alert alert-info" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div>
+                    <i class="fas fa-clock me-2"></i>{{ message|default:"Обрабатываем ваши пожелания..." }}
+                </div>
+            </div>
+        </div>
+    {% elif success %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% else %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+</div>
+
+{% if status == 'PENDING' or not ready %}
+<!-- Автоматическое обновление статуса каждые 2 секунды -->
+<div hx-get="{% url 'check_task_status' task_id %}" 
+     hx-trigger="load delay:2s" 
+     hx-target="closest .task-status" 
+     hx-swap="outerHTML">
+</div>
+{% endif %}

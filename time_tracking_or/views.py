@@ -16,7 +16,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import TimeCounterForm, TimeIntervalFormEdit
-from .models import DailySummary, TimeCounter, TimeInterval
+from .models import DailySummary, ProjectRating, TimeCounter, TimeInterval
 
 
 def recalculate_daily_summary(user, day):
@@ -124,6 +124,9 @@ class TimeCounterListView(ListView):
                 chart_values.append(round(total_duration.total_seconds() / 3600, 2))
                 chart_colors.append(counter.color)
 
+        # Добавляем контекст рейтинга проекта
+        rating_context = get_project_rating_context(self.request.user)
+        
         context.update(
             {
                 'selected_date': selected_date,
@@ -140,6 +143,7 @@ class TimeCounterListView(ListView):
                 'active_counter': active_interval.counter if active_interval else None,
                 'active_interval': active_interval,
                 'paused_counters': self.request.session.get('paused_counters', []),
+                **rating_context,  # Добавляем контекст рейтинга
             }
         )
         return context
@@ -797,3 +801,187 @@ class IntervalDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         """Restrict detail view to intervals of the requesting user."""
         return TimeInterval.objects.filter(counter__user=self.request.user)
+
+
+# === СИСТЕМА ОЦЕНОК ПРОЕКТА ===
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ProjectRatingView(LoginRequiredMixin, View):
+    """Handle like/dislike rating for the project."""
+    
+    def post(self, request):
+        """Submit or update project rating."""
+        rating_type = request.POST.get('rating')
+        comment = request.POST.get('comment', '')
+        
+        if rating_type not in ['like', 'dislike']:
+            return HttpResponse('Неверный тип оценки', status=400)
+        
+        # Получаем или создаем оценку пользователя
+        project_rating, created = ProjectRating.objects.get_or_create(
+            user=request.user,
+            defaults={'rating': rating_type, 'comment': comment}
+        )
+        
+        # Обновляем существующую оценку
+        if not created:
+            project_rating.rating = rating_type
+            project_rating.comment = comment
+            project_rating.save()
+        
+        # Возвращаем обновленную статистику
+        stats = self.get_rating_stats()
+        
+        if request.headers.get('HX-Request'):
+            return render(request, 'time_tracking_main/partials/project_rating_stats.html', {
+                'stats': stats,
+                'user_rating': project_rating,
+            })
+        
+        messages.success(request, 'Спасибо за вашу оценку!')
+        return redirect('home')
+    
+    def get_rating_stats(self):
+        """Get current project rating statistics."""
+        from django.db.models import Count, Q
+        stats = ProjectRating.objects.aggregate(
+            total_likes=Count('id', filter=Q(rating='like')),
+            total_dislikes=Count('id', filter=Q(rating='dislike')),
+            total_ratings=Count('id')
+        )
+        return stats
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SendFeedbackView(LoginRequiredMixin, View):
+    """Send user feedback to email via Celery."""
+    
+    def post(self, request):
+        """Queue feedback email for background processing."""
+        comment = request.POST.get('comment', '').strip()
+        
+        if not comment:
+            return HttpResponse('Комментарий не может быть пустым', status=400)
+        
+        try:
+            # Получаем или создаем рейтинг пользователя
+            project_rating, created = ProjectRating.objects.get_or_create(
+                user=request.user,
+                defaults={'rating': 'like', 'comment': comment}
+            )
+            
+            # Обновляем комментарий если рейтинг уже существует
+            if not created:
+                project_rating.comment = comment
+                project_rating.save()
+            
+            # Запускаем задачу отправки email в фоне
+            from .tasks import send_feedback_email_task
+            task = send_feedback_email_task.delay(request.user.id, comment)
+            
+            # Сразу отмечаем что email отправлен и сохраняем время
+            project_rating.email_sent = True
+            project_rating.email_sent_at = timezone.now()
+            project_rating.celery_task_id = task.id
+            project_rating.save()
+            
+            # Показываем сообщение об успешной отправке
+            current_time = timezone.now().strftime('%d.%m.%Y %H:%M')
+            message = f'Ваши пожелания отправлены разработчику ({current_time})'
+            status = 200
+                
+        except Exception as e:
+            message = f'Произошла ошибка при отправке: {str(e)}'
+            status = 500
+        
+        if request.headers.get('HX-Request'):
+            return render(request, 'time_tracking_main/partials/feedback_status.html', {
+                'message': message,
+                'success': status == 200,
+            })
+        
+        if status == 200:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect('home')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CheckTaskStatusView(LoginRequiredMixin, View):
+    """Check Celery task status."""
+    
+    def get(self, request, task_id):
+        """Check task status and return result."""
+        from celery.result import AsyncResult
+        
+        try:
+            result = AsyncResult(task_id)
+            
+            response_data = {
+                'task_id': task_id,
+                'status': result.status,
+                'ready': result.ready(),
+            }
+            
+            if result.ready():
+                if result.successful():
+                    response_data.update({
+                        'success': True,
+                        'message': 'Ваши пожелания успешно отправлены разработчику! 📧',
+                        'result': result.result
+                    })
+                else:
+                    response_data.update({
+                        'success': False,
+                        'message': 'Ошибка при отправке пожеланий. Попробуйте позже.',
+                        'error': str(result.result) if result.result else 'Неизвестная ошибка'
+                    })
+            else:
+                response_data.update({
+                    'success': None,
+                    'message': 'Ваши пожелания обрабатываются...',
+                })
+            
+            if request.headers.get('HX-Request'):
+                return render(request, 'time_tracking_main/partials/task_status.html', response_data)
+            
+            from django.http import JsonResponse
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            error_data = {
+                'task_id': task_id,
+                'success': False,
+                'message': 'Ошибка при проверке статуса отправки.',
+                'error': str(e)
+            }
+            
+            if request.headers.get('HX-Request'):
+                return render(request, 'time_tracking_main/partials/task_status.html', error_data)
+            
+            from django.http import JsonResponse
+            return JsonResponse(error_data, status=500)
+
+
+def get_project_rating_context(user):
+    """Get project rating context for templates."""
+    user_rating = None
+    if user.is_authenticated:
+        try:
+            user_rating = ProjectRating.objects.get(user=user)
+        except ProjectRating.DoesNotExist:
+            user_rating = None
+    
+    # Статистика оценок
+    from django.db.models import Q, Count
+    stats = ProjectRating.objects.aggregate(
+        total_likes=Count('id', filter=Q(rating='like')),
+        total_dislikes=Count('id', filter=Q(rating='dislike')),
+        total_ratings=Count('id')
+    )
+    
+    return {
+        'user_rating': user_rating,
+        'rating_stats': stats,
+    }

@@ -13,6 +13,8 @@ from .views import (
     CounterSummaryView,
     DeleteIntervalViewHTMX,
     IntervalDetailView,
+    ProjectRatingView,
+    SendFeedbackView,
     TimeCounterCreateView,
     TimeCounterDeleteView,
     TimeCounterListView,
@@ -34,4 +36,6 @@ urlpatterns = [
     path('intervals/<int:pk>/delete/', CounterIntervalDeleteView.as_view(), name='interval_delete'),
     path('interval/<int:pk>/delete/', DeleteIntervalViewHTMX.as_view(), name='interval_delite_htmx'),
     path('intervals/<int:pk>/', IntervalDetailView.as_view(), name='interval_detail'),
+    path('project/rating/', ProjectRatingView.as_view(), name='project_rating'),
+    path('project/feedback/', SendFeedbackView.as_view(), name='send_feedback'),
 ]
