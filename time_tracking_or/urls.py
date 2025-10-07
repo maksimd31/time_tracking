@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    CheckTaskStatusView,
     CounterHistoryView,
     CounterIntervalDeleteView,
     CounterIntervalUpdateView,
@@ -38,4 +39,6 @@ urlpatterns = [
     path('intervals/<int:pk>/', IntervalDetailView.as_view(), name='interval_detail'),
     path('project/rating/', ProjectRatingView.as_view(), name='project_rating'),
     path('project/feedback/', SendFeedbackView.as_view(), name='send_feedback'),
+    # Новый эндпоинт для проверки статуса Celery задачи отправки фидбэка
+    path('project/task-status/<str:task_id>/', CheckTaskStatusView.as_view(), name='task_status'),
 ]

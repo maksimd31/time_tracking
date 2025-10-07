@@ -7,22 +7,35 @@ from services.utils import unique_slugify
 from .models import Profile
 from .tasks import send_welcome_email
 
+GUEST_PREFIX = "guest_"
+
+
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Create a profile and queue welcome email for new users."""
-    if created:
+def create_user_profile(sender, instance, created, **kwargs):  # noqa: D401
+    """Create a profile and queue welcome email for real (non-guest) users.
 
-        # Создание профиля
-        # profile = Profile.objects.create(user=instance)
-        profile = Profile.objects.create(user=instance)
+    Guest users are auto-created by middleware (see GuestIPAuthenticationMiddleware)
+    and must NOT receive profiles or welcome emails. We identify them by:
+      1. Username prefix 'guest_'; OR
+      2. Unusable password (middleware sets unusable password for guests).
+    """
+    if not created:
+        return
 
-        # # Генерация уникального slug
-        profile.slug = unique_slugify(profile, instance.username, profile.slug)
-        profile.save(update_fields=['slug'])
+    # Skip guest accounts
+    if instance.username.startswith(GUEST_PREFIX) or not instance.has_usable_password():
+        return
 
-        # Отправка приветственного сообщения
+    # Создание профиля
+    profile = Profile.objects.create(user=instance)
+
+    # Генерация уникального slug
+    profile.slug = unique_slugify(profile, instance.username, profile.slug)
+    profile.save(update_fields=['slug'])
+
+    # Отправка приветственного сообщения (если email указан)
+    to_email = instance.email
+    if to_email:
         subject = instance.first_name or 'Добро пожаловать'
         message = f'Добро пожаловать {instance.username}'
-        to_email = instance.email
-        if to_email:
-            send_welcome_email.delay(subject, message, to_email)
+        send_welcome_email.delay(subject, message, to_email)
