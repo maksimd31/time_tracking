@@ -70,6 +70,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+doc/
 
 # PyBuilder
 .pybuilder/
@@ -200,7 +201,11 @@ CELERY_QUICKSTART.md
 # Pytest documentation
 PYTEST_README.md
 EMAIL_CONFIG.md
+DEPLOY_CELERY.md
+docs/DEPLOY_CELERY.md
 
 # Django migrations (ignore all migration files; keep packages if restored)
 */migrations/
 !*/migrations/__init__.py
+
+docs
