@@ -1,7 +1,9 @@
 """Views that power counter dashboards, history pages, and HTMX endpoints."""
 
 from datetime import timedelta
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Sum
@@ -162,11 +164,46 @@ class TimeCounterCreateView(LoginRequiredMixin, CreateView):
     template_name = 'time_tracking_main/counter_form.html'
     success_url = reverse_lazy('home')
 
+    def dispatch(self, request, *args, **kwargs):
+        """Prevent guests from exceeding the counter limit."""
+        if self._guest_limit_reached(request):
+            return self._redirect_guest_limit()
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         """Attach the current user and show a success message."""
+        if self._guest_limit_reached(self.request):
+            return self._redirect_guest_limit()
         form.instance.user = self.request.user
         messages.success(self.request, 'Счетчик создан.')
         return super().form_valid(form)
+
+    def _guest_limit_reached(self, request):
+        """Return True if the current request comes from a limited guest."""
+        limit = getattr(settings, 'GUEST_COUNTER_LIMIT', 0)
+        if limit <= 0:
+            return False
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        is_guest = (
+            request.session.get('is_guest')
+            or not user.has_usable_password()
+            or user.username.startswith('guest_')
+        )
+        if not is_guest:
+            return False
+        counter_count = TimeCounter.objects.filter(user=user).count()
+        return counter_count >= limit
+
+    def _redirect_guest_limit(self):
+        """Send guest users to the registration page with a prompt."""
+        limit = getattr(settings, 'GUEST_COUNTER_LIMIT', 0)
+        query = urlencode({'guest_limit': limit}) if limit else ''
+        register_url = reverse('register')
+        if query:
+            register_url = f'{register_url}?{query}'
+        return redirect(register_url)
 
 
 class TimeCounterUpdateView(LoginRequiredMixin, UpdateView):

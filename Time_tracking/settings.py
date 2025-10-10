@@ -241,9 +241,10 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
 CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'False') == 'True'  # Изменено на False для работы через worker
 CELERY_TASK_EAGER_PROPAGATES = True
 
-GUEST_ACCOUNT_RETENTION_DAYS = int(os.getenv('GUEST_ACCOUNT_RETENTION_DAYS', '14'))
+GUEST_ACCOUNT_RETENTION_DAYS = int(os.getenv('GUEST_ACCOUNT_RETENTION_DAYS', '10'))
 _guest_cleanup_hour = int(os.getenv('GUEST_CLEANUP_HOUR', '3'))
 _guest_cleanup_minute = int(os.getenv('GUEST_CLEANUP_MINUTE', '0'))
+GUEST_COUNTER_LIMIT = int(os.getenv('GUEST_COUNTER_LIMIT', '2'))
 
 CELERY_BEAT_SCHEDULE = {
     'cleanup-stale-guests': {

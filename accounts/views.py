@@ -158,6 +158,15 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
         """Attach page title for template consumption."""
         context = super().get_context_data(**kwargs)
         context['title'] = 'Регистрация на сайте'
+        raw_limit = self.request.GET.get('guest_limit')
+        limit_from_url = None
+        if raw_limit is not None:
+            try:
+                limit_from_url = max(int(raw_limit), 0)
+            except (TypeError, ValueError):
+                limit_from_url = None
+        context['guest_counter_limit'] = limit_from_url or getattr(settings, 'GUEST_COUNTER_LIMIT', 0)
+        context['guest_limit_prompt'] = bool(limit_from_url)
         return context
 
     def form_valid(self, form):

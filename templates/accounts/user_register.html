@@ -1,13 +1,46 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% if guest_limit_prompt %}
+<style>
+    .guest-limit-banner {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    .guest-limit-card {
+        max-width: 520px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+    }
+    @media (max-width: 576px) {
+        .guest-limit-card {
+            padding: 2rem;
+        }
+    }
+</style>
+<div class="guest-limit-banner">
+    <div class="guest-limit-card">
+        <h2 class="h4 mb-3">Больше счетчиков — после регистрации</h2>
+        <p class="text-muted-soft mb-4">Гостям доступно только {{ guest_counter_limit }} счетчика. Создайте аккаунт, чтобы открывать новые счетчики, синхронизировать данные между устройствами и получать расширенную аналитику.</p>
+        <div class="d-flex flex-column gap-2">
+            <a class="btn btn-primary" href="#register-form">Перейти к регистрации</a>
+            <a class="btn btn-outline-secondary" href="{% url 'login' %}">Уже есть аккаунт? Войти</a>
+        </div>
+    </div>
+</div>
+{% endif %}
 <div class="row justify-content-center">
     <div class="col-xl-5 col-lg-6">
         <div class="card">
             <div class="card-body p-5">
                 <h2 class="h4 fw-semibold mb-3">Создание аккаунта</h2>
                 <p class="text-muted-soft mb-4">Откройте доступ ко всем возможностям: множественные счетчики, аналитика и история.</p>
-                <form method="post" action="{% url 'register' %}" class="vstack gap-3">
+                <form method="post" action="{% url 'register' %}" class="vstack gap-3" id="register-form">
                     {% csrf_token %}
                     {{ form.non_field_errors }}
                     {% for field in form %}
