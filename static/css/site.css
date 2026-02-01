@@ -238,6 +238,34 @@ main.page-wrapper {
     display: none;
 }
 
+.contact-link {
+    color: #6c757d;
+    font-weight: 600;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.contact-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.2rem;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.8), rgba(59, 130, 246, 0.8));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.contact-link:hover {
+    color: #dee2e6;
+}
+
+.contact-link:hover::after {
+    transform: scaleX(1);
+}
+
 .text-muted-soft {
     color: var(--muted-color) !important;
 }
@@ -638,4 +666,3 @@ body.auto-compact-xxs .navbar-modern .nav-link { padding: 5px 10px !important; f
         max-height: 70vh;             /* чтобы не вылезало ниже экрана */
     }
 }
-

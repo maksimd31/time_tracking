@@ -41,13 +41,19 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     'vremya.fun',
+    'interval.press',
     'f046-92-42-96-168.ngrok-free.app',
     '*'
 
 ]
 
-if os.getenv('CSRF_TRUSTED_ORIGINS'):
-    CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').replace(' ', '').split(',')
+CSRF_TRUSTED_ORIGINS = [
+    x for x in (os.getenv("CSRF_TRUSTED_ORIGINS") or "").replace(" ", "").split(",") if x
+]
+
+
+# if os.getenv('CSRF_TRUSTED_ORIGINS'):
+#     CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').replace(' ', '').split(',')
 
 SITE_ID = 1
 
@@ -249,7 +255,8 @@ GUEST_COUNTER_LIMIT = int(os.getenv('GUEST_COUNTER_LIMIT', '2'))
 CELERY_BEAT_SCHEDULE = {
     'cleanup-stale-guests': {
         'task': 'accounts.tasks.cleanup_stale_guests',
-        'schedule': crontab(hour=_guest_cleanup_hour, minute=_guest_cleanup_minute),
+        'schedule': crontab(hour=str(_guest_cleanup_hour), minute=str(_guest_cleanup_minute))
+
     }
 }
 
@@ -298,6 +305,8 @@ SOCIAL_AUTH_PIPELINE = (  # Последовательность обработ�
 
 # Кеширование ---------------------------------------------------------------
 # Redis в качестве основного cache backend. Fallback на локальную память если нет redis / пакета.
+
+
 try:
     import django_redis  # noqa: F401
     _redis_cache_url = (
