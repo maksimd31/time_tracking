@@ -1,11 +1,14 @@
 """Celery tasks for project feedback and email notifications."""
 
 import ssl
+import logging
 from celery import shared_task
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
+
+logger = logging.getLogger(__name__)
 
 # Обход SSL проблемы на macOS для development
 if settings.DEBUG:
@@ -71,6 +74,10 @@ def send_feedback_email_task(self, user_id, comment):
         }
         
     except Exception as exc:
+        logger.exception(
+            "Send feedback email failed; will retry if possible",
+            extra={"user_id": user_id, "task_id": self.request.id},
+        )
         # Повторяем задачу при ошибке
         if self.request.retries < self.max_retries:
             # Экспоненциальная задержка: 60s, 120s, 240s
@@ -78,6 +85,10 @@ def send_feedback_email_task(self, user_id, comment):
             raise self.retry(exc=exc, countdown=countdown)
         
         # Если все попытки неудачны
+        logger.error(
+            "Send feedback email failed after max retries",
+            extra={"user_id": user_id, "task_id": self.request.id},
+        )
         error_msg = f'Ошибка отправки email после {self.max_retries} попыток: {str(exc)}'
         return {
             'success': False,

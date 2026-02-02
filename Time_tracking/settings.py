@@ -293,7 +293,41 @@ SOCIAL_AUTH_PIPELINE = (  # Последовательность обработ�
 # Логирование ---------------------------------------------------------------
 # Используем стандартную конфигурацию Django без дополнительного логгера VK.
 # Это исключает создание файлов на диске при старте приложения.
-# LOGGING = None
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+        }
+    },
+    "handlers": {
+        "celery_errors_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "celery_errors.log"),
+            "formatter": "verbose",
+        }
+    },
+    "loggers": {
+        "celery": {
+            "handlers": ["celery_errors_file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+        "celery.app.trace": {
+            "handlers": ["celery_errors_file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+        "time_tracking_or.tasks": {
+            "handlers": ["celery_errors_file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}
 
 # Кеширование ---------------------------------------------------------------
 # Redis в качестве основного cache backend. Fallback на локальную память если нет redis / пакета.
