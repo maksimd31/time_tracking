@@ -31,22 +31,11 @@ SECRET_KEY: str | None = os.getenv("SECRET_KEY")
 # DEBUG = True
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-#
-# if os.getenv('ALLOWED_HOSTS'):
-#     ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').replace(' ', '').split(',')
-# else:
-#     ALLOWED_HOSTS = []
 
-ALLOWED_HOSTS = [x for x in (os.getenv('ALLOWED_HOSTS') or '').replace(' ', '').split(',') if x]
 
-# ALLOWED_HOSTS = [
-#     '127.0.0.1',
-#     'localhost',
-#     'vremya.fun',
-#     'f046-92-42-96-168.ngrok-free.app',
-#     '*'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').replace(' ', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
 
-# ]
+
 
 CSRF_TRUSTED_ORIGINS = [
     x for x in (os.getenv("CSRF_TRUSTED_ORIGINS") or "").replace(" ", "").split(",") if x
