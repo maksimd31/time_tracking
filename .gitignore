@@ -209,3 +209,5 @@ docs/DEPLOY_CELERY.md
 !*/migrations/__init__.py
 
 docs
+
+restart_services.sh
