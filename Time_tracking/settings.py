@@ -37,15 +37,16 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 # else:
 #     ALLOWED_HOSTS = []
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    'vremya.fun',
-    'interval.press',
-    'f046-92-42-96-168.ngrok-free.app',
-    '*'
+ALLOWED_HOSTS = [x for x in (os.getenv('ALLOWED_HOSTS') or '').replace(' ', '').split(',') if x]
 
-]
+# ALLOWED_HOSTS = [
+#     '127.0.0.1',
+#     'localhost',
+#     'vremya.fun',
+#     'f046-92-42-96-168.ngrok-free.app',
+#     '*'
+
+# ]
 
 CSRF_TRUSTED_ORIGINS = [
     x for x in (os.getenv("CSRF_TRUSTED_ORIGINS") or "").replace(" ", "").split(",") if x
